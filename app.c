@@ -47,6 +47,7 @@
 #include "serial.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 void init(void)
 {
@@ -56,6 +57,7 @@ void init(void)
 
 double z = 0;
 double aspect = 1;
+int score = 0;
 void display(void)
 {
 
@@ -108,13 +110,19 @@ void display(void)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    glColor3f(1, 1, 1);
-   glBegin(GL_POLYGON);
+   /*   glBegin(GL_POLYGON);
    glVertex3f(0, 0, 0);
    glVertex3f(0, 0.3, 0);
    glVertex3f(0.3, 0.3, 0);
    glVertex3f(0.3, 0, 0);
    glEnd();
-
+   */
+   glRasterPos2f(0, 0);
+   char score_text[20];
+   //strcpy(score_text, "Score: ");
+   //itoa(score, score_text + 7);
+   sprintf(score_text, "Score: %d", score);
+   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
 
    glFlush();
    
@@ -143,6 +151,13 @@ void update(){
   z = (d - 3) / 10;
   z = 2.5 * (1 - exp(-z));
   printf("%f -> %f\n", d, z);
+
+  static double prev_d = 1000;
+  if(prev_d >= 10 && d < 10){
+    score++;
+  }
+  prev_d = d;
+  
   glutPostRedisplay();
 }
 
