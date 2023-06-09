@@ -10,3 +10,5 @@ TARGET: ${OBJS}
 	${CC} -o ${TARGET} ${OBJS} ${LDFLAGS}
 clean:
 	${RM} ${TARGET} *.o *~
+serial: serial.c serial.h
+	${CC} -o serial serial.c -DIS_MAIN
