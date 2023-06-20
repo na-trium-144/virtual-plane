@@ -50,7 +50,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include <time.h>
 
 void init(void)
 {
@@ -195,11 +194,17 @@ void display(void)
    glLoadIdentity();
    
    glColor3f(1, 1, 1);
-   glRasterPos2f(10, 10);
+   glRasterPos2f(10, 35);
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
-   glRasterPos2f(80, 10);
+   glRasterPos2f(80, 35);
    char score_text[20];
    sprintf(score_text, "%d", score);
+   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
+
+   glRasterPos2f(10, 10);
+   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "HiScore:");
+   glRasterPos2f(100, 10);
+   sprintf(score_text, "%d", hiscore);
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
 
    if(game_state == g_over){
@@ -246,7 +251,7 @@ int main(int argc, char** argv)
   if(!init_serial()){
     //return 1;
   }
-  srand((unsigned int)time(NULL));
+  init_game();
   
    glutInit(&argc, argv);
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);

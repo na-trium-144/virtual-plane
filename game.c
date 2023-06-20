@@ -4,12 +4,40 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define D_MIN 5
 #define D_MAX 15
 
-double y;
-int score;
+double y = 0;
+int score = 0;
+int hiscore = 0;
+void init_game(){
+  srand((unsigned int)time(NULL));
+
+  int f = open("hiscore.txt", O_RDONLY);
+  if(f >= 0){
+    char buf[20];
+    read(f, buf, sizeof(buf));
+    hiscore = atoi(buf);
+  }
+  close(f);
+}
+void save_score(){
+  if(score > hiscore){
+    hiscore = score;
+    int f = open("hiscore.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if(f >= 0){
+      char buf[20];
+      int n = sprintf(buf, "%d", hiscore);
+      write(f, buf, n);
+    }
+    close(f);
+  }
+}
 
 struct GameObj game_obj[GAME_OBJ_NUM];
 int game_obj_current;
@@ -53,6 +81,7 @@ void obj_check(double sec_diff){
 	case g_block:
 	  game_state = g_over;
 	  game_main_t = 0;
+	  save_score();
 	  break;
 	case g_coin:
 	  g->score = 100;

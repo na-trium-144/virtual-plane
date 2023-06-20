@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 #include "serial.h"
 

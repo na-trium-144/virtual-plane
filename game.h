@@ -1,5 +1,6 @@
 extern double y;
-extern int score;
+extern int score, hiscore;
+void init_game();
 int game_update();
 #define Y_RANGE 3
 #define X_RANGE 10
