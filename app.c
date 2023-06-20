@@ -146,19 +146,20 @@ void keyboard(unsigned char key, int x, int y)
 }
 
 void update(){
-  read_serial();
-  double d = get_distance();
-  z = (d - 3) / 10;
-  z = 2.5 * (1 - exp(-z));
-  printf("%f -> %f\n", d, z);
+  if(read_serial()){
+    z = (serial_distance - 3) / 10;
+    z = 2.5 * (1 - exp(-z));
+    printf("%f -> %f\n", serial_distance, z);
 
-  static double prev_d = 1000;
-  if(prev_d >= 10 && d < 10){
-    score++;
-  }
-  prev_d = d;
+    if(serial_distance_trigger(10) == -1){
+      score++;
+    }
+    if(serial_button_trigger() == -1){
+      score += 3;
+    }
   
-  glutPostRedisplay();
+    glutPostRedisplay();
+  }
 }
 
 int main(int argc, char** argv)

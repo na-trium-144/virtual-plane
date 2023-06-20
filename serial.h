@@ -1,6 +1,7 @@
 #define SERIAL_BUF_LEN 256
-extern int serial_port;
-extern char serial_buf[SERIAL_BUF_LEN];
+extern double serial_distance;
+extern int serial_button;
 int init_serial();
 int read_serial();
-double get_distance();
+int serial_button_trigger();
+int serial_distance_trigger(double target);
