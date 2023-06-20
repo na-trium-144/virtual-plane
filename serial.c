@@ -51,6 +51,9 @@ char buf[SERIAL_BUF_LEN] = {};
 int tmp_pos = 0, tmp_len = 0;
 
 int read_serial_next(){
+  if(serial_port < 0){
+    return 0;
+  }
   int new_len = read(serial_port, buf, sizeof(buf));
   if(new_len > 0){
     tmp_len = new_len;

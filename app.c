@@ -131,7 +131,7 @@ void display(void)
        sprintf(score_text, "%d", g->score);
        glLoadIdentity();
        glColor3f(1, 1, 1);
-       glRasterPos3f(0, g->y + 0.6, 0);
+       glRasterPos3f(0, g->score_y + 0.5, 0);
        glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
      }
 
@@ -208,13 +208,13 @@ void display(void)
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
 
    if(game_state == g_over){
-     display_text(1, 0.2, 0.2, -70, "GAME OVER", 0);
+     display_text(1, 0.2, 0.2, -60, "Game Over", 0);
    }
    if(game_state == g_ready){
-     display_text(0.2, 0.7, 1, -45, "READY?", game_main_t / READY_T);
+     display_text(0.2, 0.7, 1, -35, "Ready?", game_main_t / READY_T);
    }
    if(game_state == g_main && game_main_t < 1.5){
-     display_text(1, 0.7, 0.2, -43, "START!", 0);
+     display_text(1, 0.7, 0.2, -30, "Start!", 0);
    }
 
    glFlush();
@@ -239,8 +239,18 @@ void keyboard(unsigned char key, int x, int y)
          break;
    }
 }
+void mouse_click(int b, int s, int x, int y){
+  if(b == 2 && s == GLUT_DOWN){ //右クリックのみ反応
+    mouse_clicked = 1;
+  }
+}
+void mouse_motion(int x, int y){
+  mouse_x_rat = (double)x / width;
+  mouse_y_rat = (double)y / height;
+}
 
 void update(){
+  read_serial();
   if(game_update()){
     glutPostRedisplay();
   }
@@ -250,19 +260,25 @@ int main(int argc, char** argv)
 {
   if(!init_serial()){
     //return 1;
+    printf("using mouse instead\n");
+    use_mouse = 1;
   }
   init_game();
   
-   glutInit(&argc, argv);
-   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
-   glutInitWindowSize(width, height);
-   glutInitWindowPosition (100, 100);
-   glutCreateWindow (argv[0]);
-   init ();
-   glutDisplayFunc(display);
-   glutReshapeFunc(reshape);
-   glutKeyboardFunc(keyboard);
-   glutIdleFunc(update);
-   glutMainLoop();
-   return 0;
+  glutInit(&argc, argv);
+  glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
+  glutInitWindowSize(width, height);
+  glutInitWindowPosition (100, 100);
+  glutCreateWindow (argv[0]);
+  init ();
+  glutDisplayFunc(display);
+  glutReshapeFunc(reshape);
+  glutKeyboardFunc(keyboard);
+  glutIdleFunc(update);
+  if(use_mouse){
+    glutMouseFunc(mouse_click);
+    glutMotionFunc(mouse_motion);
+  }
+  glutMainLoop();
+  return 0;
 }

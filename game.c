@@ -15,6 +15,11 @@
 double y = 0;
 int score = 0;
 int hiscore = 0;
+
+double mouse_x_rat, mouse_y_rat;
+int use_mouse = 0;
+int mouse_clicked = 0, mouse_clicked_prev = 0;
+
 void init_game(){
   srand((unsigned int)time(NULL));
 
@@ -50,7 +55,12 @@ double rand1(){
 }
 
 void move_myship(){
-  double yp = (serial_distance - (D_MAX + D_MIN) / 2) / ((D_MAX - D_MIN) / 2);
+  double yp;
+  if(use_mouse){
+    yp = (0.5 - mouse_y_rat) * 3;
+  }else{
+    yp = (serial_distance - (D_MAX + D_MIN) / 2) / ((D_MAX - D_MIN) / 2);
+  }
   if(yp < -1){
     yp = -1;
   }
@@ -88,6 +98,7 @@ void obj_check(double sec_diff){
 	  score += g->score;
 	  g->score_t = 0.5;
 	  g->kind = g_none;
+    g->score_y = g->y;
 	  break;
 	}
       }
@@ -99,6 +110,7 @@ void obj_check(double sec_diff){
 	    g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 50);
 	    score += g->score;
 	    g->score_t = 0.5;
+      g->score_y = g->y;
 	    break;
 	  case g_coin:
 	    break;
@@ -133,7 +145,8 @@ int game_update(){
   }
   sec_prev = sec;
 
-  read_serial();
+  int mouse_click_trigger = mouse_clicked && !mouse_clicked_prev;
+  mouse_clicked_prev = mouse_clicked;
 
   switch(game_state){
   case g_ready:
@@ -147,13 +160,13 @@ int game_update(){
     }else{
       game_main_t = 0;
     }
-    if(serial_button_trigger() == 1){
+    if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
       printf("exit\n");
       exit(0);
     }
     break;
   case g_over:
-    if(serial_button_trigger() == 1){
+    if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
       game_state = g_ready;
       game_main_t = 0;
       score = 0;
@@ -179,6 +192,7 @@ int game_update(){
       g->t = 0;
       g->score = 0;
       g->score_t = 0;
+      g->hit_me = 0;
     }
     break;
   }

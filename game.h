@@ -18,9 +18,11 @@ extern struct GameObj{
   double t; // アニメーション用
   int hit_me; // 自機にあたった→動かなくなる
   int score; // このオブジェクトに表示するスコア
+  double score_y; // スコア表示時のy座標(固定するため)
   double score_t; // スコアの残り表示時間
 } game_obj[];
 extern int game_obj_current;
 
-void obj_check(double sec_diff);
-void obj_clear();
+extern double mouse_x_rat, mouse_y_rat;
+extern int use_mouse;
+extern int mouse_clicked;
