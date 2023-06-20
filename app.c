@@ -53,11 +53,12 @@
 
 void init(void)
 {
-   glClearColor (0.6, 0.9, 1.0, 0.0);
+  glClearColor (0, 0, 0, 0);
    glShadeModel (GL_FLAT);
 }
 
 double aspect = 1;
+int width = 1280, height = 960;
 void display(void)
 {
 
@@ -78,7 +79,6 @@ void display(void)
    // 以下はsample-cube.cのコピペ
    // xが奥、zが右手前、yが上
    
-   glColor3f (0.5, 0.3, 0.0);
    //glLoadIdentity ();             /* clear the matrix */
            /* viewing transformation  */
    //gluLookAt (0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
@@ -92,16 +92,36 @@ void display(void)
 
    glLoadIdentity();
    glTranslatef(0, y, 0);
+   glColor3f (0.3, 0.6, 1);
    glutWireCube (1.0);
 
 
-   glLoadIdentity();
-   glTranslatef(5, 0, 0);
-   glRotatef(45, 1, 0, 0);
-   glutWireCube(0.5);
+   for(struct GameObj *g = game_obj; g < game_obj + GAME_OBJ_NUM; g++){
+     if(g->score_t > 0){
+       char score_text[20];
+       sprintf(score_text, "%d", g->score);
+       glLoadIdentity();
+       glColor3f(1, 1, 1);
+       glRasterPos3f(0, g->y + 0.6, 0);
+       glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
+     }
+
+     if(g->kind == g_none){
+       continue;
+     }
+     
+     glLoadIdentity();
+     glTranslatef(g->x, g->y, 0);
+     glRotatef(g->t * 90, 1, 0.7, 0);
+     glColor3f(1, 0.7, 0.7);
+     if(g->kind == g_block){
+       glutWireCube(0.5);
+     }
+     
+   }
 
    glLoadIdentity();
-   glColor3f(0, 0, 0);
+   glColor3f(0.3, 0.3, 0.3);
    glBegin(GL_LINE_STRIP);
    glVertex3f(0, -3, 0);
    glVertex3f(0, 3, 0);
@@ -132,11 +152,12 @@ void display(void)
    //glFlush ();
 
 
-      glMatrixMode(GL_PROJECTION);
+   glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   gluOrtho2D(0, 1, 0, 1);
+   gluOrtho2D(0, width, 0, height);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
+   
    glColor3f(1, 1, 1);
    /*   glBegin(GL_POLYGON);
    glVertex3f(0, 0, 0);
@@ -145,12 +166,26 @@ void display(void)
    glVertex3f(0.3, 0, 0);
    glEnd();
    */
-   glRasterPos2f(0, 0);
+   glRasterPos2f(10, 10);
+   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
+   glRasterPos2f(80, 10);
    char score_text[20];
-   //strcpy(score_text, "Score: ");
-   //itoa(score, score_text + 7);
-   sprintf(score_text, "Score: %d", score);
+   sprintf(score_text, "%d", score);
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
+
+   if(game_over){
+     glLoadIdentity();
+     glColor3f(1, 0.2, 0.2);
+     glTranslatef(width / 2, height / 2, 0);
+     glRasterPos2f(-70, -9);
+     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "GAME OVER");
+     glBegin(GL_LINE_LOOP);
+     glVertex2f(-100, -30);
+     glVertex2f(-100, 30);
+     glVertex2f(100, 30);
+     glVertex2f(100, -30);
+     glEnd();
+   }
 
    glFlush();
    
@@ -161,6 +196,8 @@ void reshape (int w, int h)
 {
    glViewport (0, 0, (GLsizei) w, (GLsizei) h);
    aspect = (double)w / h;
+   width = w;
+   height = h;
 }
 
 /* ARGSUSED1 */
@@ -188,7 +225,7 @@ int main(int argc, char** argv)
   
    glutInit(&argc, argv);
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
-   glutInitWindowSize (1280, 960);
+   glutInitWindowSize(width, height);
    glutInitWindowPosition (100, 100);
    glutCreateWindow (argv[0]);
    init ();
