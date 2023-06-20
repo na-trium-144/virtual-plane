@@ -47,7 +47,7 @@ void save_score(){
 struct GameObj game_obj[GAME_OBJ_NUM];
 int game_obj_current;
 int game_over = 0;
-enum GameState game_state = g_ready;
+enum GameState game_state = g_title;
 double game_main_t = 0;
 
 double rand1(){
@@ -102,6 +102,7 @@ void obj_check(double sec_diff){
 	  g->kind = g_none;
     g->score_y = g->y;
 	  break;
+  case g_none:
 	}
       }
       if(g->x < -0.5 && gx_prev >= -0.5){
@@ -116,6 +117,7 @@ void obj_check(double sec_diff){
 	    break;
 	  case g_coin:
 	    break;
+    case g_none:
 	  }
 	}
       }
@@ -152,6 +154,13 @@ int game_update(){
   mouse_clicked = 0;
 
   switch(game_state){
+  case g_title:
+    move_myship(sec_diff);
+    if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
+      game_main_t = 0;
+      game_state = g_ready;
+    }
+    break;
   case g_ready:
     move_myship(sec_diff);
     if(fabs(y) < Y_RANGE){
@@ -164,13 +173,13 @@ int game_update(){
       game_main_t = 0;
     }
     if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
-      printf("exit\n");
-      exit(0);
+      game_main_t = 0;
+      game_state = g_title;
     }
     break;
   case g_over:
     if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
-      game_state = g_ready;
+      game_state = g_title;
       game_main_t = 0;
       score = 0;
       obj_clear();

@@ -6,7 +6,7 @@ int game_update();
 #define X_RANGE 10
 
 #define READY_T 1.5
-enum GameState { g_ready, g_main, g_over, };
+enum GameState { g_title, g_ready, g_main, g_over, };
 extern enum GameState game_state;
 extern double game_main_t;
 

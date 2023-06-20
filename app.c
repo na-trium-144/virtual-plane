@@ -81,6 +81,37 @@ void display_text(double r, double g, double b, int x, const char *str, double s
   }
   glPopMatrix();
 }
+void display_title(double r, double g, double b){
+  glPushMatrix();
+  {
+    glColor3f(r, g, b);
+    glTranslatef(width / 2, height / 2, 0);
+
+    glRasterPos2f(-70, 20);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Virtual Plane");
+    glBegin(GL_LINES);
+    {
+      glVertex2f(-200, 0);
+      glVertex2f(200, 0);
+    }
+    glEnd();
+
+    glRasterPos2f(-120, -40);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "< Press Button to Start >");
+    
+    glRasterPos2f(-105, -120);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "--- How to Play ---");
+    glRasterPos2f(-260, -180);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "1. Hold the circuit board with the sensor facing down,");
+    glRasterPos2f(-240, -210);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "and move it to control the plane.");
+    glRasterPos2f(-260, -250);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "2. Press the button to shoot.");
+
+
+  }
+  glPopMatrix();
+}
 
 void display(void)
 {
@@ -105,9 +136,9 @@ void display(void)
   glEnable(GL_LIGHT0);
   glEnable(GL_COLOR_MATERIAL);
   static float light0[4][4]={{1, 1, 3, 1}, //position
-                      {0.2, 0.2, 0.2, 1}, //ambient
-                      {0.6, 0.6, 0.6, 1}, //diffuse
-                      {0.8, 0.8, 0.8, 1}}; //specular
+                      {0.1, 0.1, 0.1, 1}, //ambient
+                      {1.0, 1.0, 1.0, 1}, //diffuse
+                      {0.6, 0.6, 0.6, 1}}; //specular
   glLightfv(GL_LIGHT0, GL_POSITION, light0[0]);
   glLightfv(GL_LIGHT0, GL_AMBIENT, light0[1]);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, light0[2]);
@@ -137,11 +168,11 @@ void display(void)
       glNormal3f(0, 1, 0);
       glVertex3f(0.5, 0.2, 0);
       glVertex3f(-0.5, 0.2, 0.1);
-      glVertex3f(-0.5, 0.2, 0.5);
+      glVertex3f(-0.5, 0.15, 0.5);
 
       glNormal3f(0, 1, 0);
       glVertex3f(0.5, 0.2, 0);
-      glVertex3f(-0.5, 0.2, -0.5);
+      glVertex3f(-0.5, 0.15, -0.5);
       glVertex3f(-0.5, 0.2, -0.1);
 
       glNormal3f(0, 0, -1);
@@ -194,7 +225,7 @@ void display(void)
         // innerR, outerR, nsides, rings
         glutSolidTorus(0.05, 0.3, 8, 20);
         break;
-      default:
+      case g_none:
       }
     }
     glPopMatrix();
@@ -239,14 +270,21 @@ void display(void)
   sprintf(text, "%d", hiscore);
   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
 
-  if(game_state == g_over){
+  switch(game_state){
+  case g_over:
     display_text(1, 0.2, 0.2, -60, "Game Over", 0);
-  }
-  if(game_state == g_ready){
+    break;
+  case g_title:
+    display_title(0.2, 0.7, 1);
+    break;
+  case g_ready:
     display_text(0.2, 0.7, 1, -35, "Ready?", game_main_t / READY_T);
-  }
-  if(game_state == g_main && game_main_t < 1.5){
-    display_text(1, 0.7, 0.2, -30, "Start!", 0);
+    break;
+  case g_main:
+    if(game_main_t < 1.5){
+      display_text(1, 0.7, 0.2, -30, "Start!", 0);
+    }
+    break;
   }
 
   glFlush();
