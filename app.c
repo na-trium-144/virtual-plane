@@ -90,14 +90,22 @@ void display(void)
 
    //glScalef (1.0, 2.0, 1.0);      /* modeling transformation */
 
+   // 自機
    glLoadIdentity();
    glTranslatef(0, y, 0);
-   glColor3f (0.3, 0.6, 1);
+   if(fabs(y) < Y_RANGE){
+     glColor3f (0.3, 0.6, 1);
+   }else{
+     // 範囲外だよ 色を変える
+     glColor3f(0.1, 0.1, 0.3);
+   }
+   
    glutWireCube (1.0);
 
 
    for(struct GameObj *g = game_obj; g < game_obj + GAME_OBJ_NUM; g++){
      if(g->score_t > 0){
+       // オブジェクトごとの点数表示
        char score_text[20];
        sprintf(score_text, "%d", g->score);
        glLoadIdentity();
@@ -113,10 +121,18 @@ void display(void)
      glLoadIdentity();
      glTranslatef(g->x, g->y, 0);
      glRotatef(g->t * 90, 1, 0.7, 0);
-     glColor3f(1, 0.7, 0.7);
-     if(g->kind == g_block){
-       glutWireCube(0.5);
+     switch(g->kind){
+     case g_block:
+       glColor3f(1, 0.8, 0.7);
+       glutSolidCube(0.5);
+       break;
+     case g_coin:
+       glColor3f(1, 1, 0.3);
+       // innerR, outerR, nsides, rings
+       glutSolidTorus(0.05, 0.4, 8, 20);
+       break;
      }
+     
      
    }
 

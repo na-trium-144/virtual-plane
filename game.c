@@ -48,6 +48,7 @@ int game_update(){
   }
 
   for(struct GameObj *g = game_obj; g < game_obj + GAME_OBJ_NUM; g++){
+    g->score_t -= sec_diff;
     if(g->kind == g_none){
       continue;
     }
@@ -56,18 +57,33 @@ int game_update(){
       g->x -= g->vx * sec_diff;
       g->y -= g->vy * sec_diff;
       g->t += sec_diff;
-      g->score_t -= sec_diff;
       if(fabs(g->x) <= 0.5 && fabs(g->y - y) <= 0.5){
 	// 自機に衝突
-	g->hit_me = 1;
-	game_over = 1;
+	 g->hit_me = 1;
+	switch(g->kind){
+	case g_block:
+	  game_over = 1;
+	  break;
+	case g_coin:
+	  g->score = 100;
+	  score += g->score;
+	  g->score_t = 0.5;
+	  g->kind = g_none;
+	  break;
+	}
       }
       if(g->x < -0.5 && gx_prev >= -0.5){
 	// 自機通過
-	if(!game_over){
-	  g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 10);
-	  score += g->score;
-	  g->score_t = 0.5;
+	if(!game_over && fabs(y) < Y_RANGE){
+	  switch(g->kind){
+	  case g_block:
+	    g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 50);
+	    score += g->score;
+	    g->score_t = 0.5;
+	    break;
+	  case g_coin:
+	    break;
+	  }
 	}
       }
       if(g->x < -3){
@@ -79,11 +95,15 @@ int game_update(){
   if(rand1() < 1.0 / 60){
     struct GameObj *g = &game_obj[game_obj_current];
     game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
-    g->kind = g_block;
+    if(rand1() < 0.7){
+      g->kind = g_block;
+    }else{
+      g->kind = g_coin;
+    }
     g->x = X_RANGE;
-    g->vx = 3.0; 
+    g->vx = 1.0 + 5.0 * rand1(); // 1〜6 
     g->y = (2 * rand1() - 1) * Y_RANGE;
-    g->vy = 0;
+    g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
     g->t = 0;
     g->score = 0;
     g->score_t = 0;
