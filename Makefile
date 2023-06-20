@@ -3,7 +3,7 @@ RM = rm -f
 CFLAGS = -Wall
 LDFLAGS = -lglut -lGLU -lGL -lm
 TARGET = app
-OBJS = app.o serial.o
+OBJS = app.o serial.o game.o
 .c.o:
 	${CC} -c ${CFLAGS} $<
 TARGET: ${OBJS}

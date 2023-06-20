@@ -45,19 +45,26 @@
 #include <stdlib.h>
 
 #include "serial.h"
+#include "game.h"
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 
 void init(void)
 {
-   glClearColor (0.4, 0.8, 1.0, 0.0);
+   glClearColor (0.6, 0.9, 1.0, 0.0);
    glShadeModel (GL_FLAT);
 }
 
-double z = 0;
+void look(){
+  // default 0,0,0 -> z- (up= y+)
+  glTranslatef(-2.5, 0, 0); // 原点を左に移動する
+  // eye -> center, (up)
+  gluLookAt(-4, 0, 7, 0, 0, 0, 0, 1, 0);
+}
+
 double aspect = 1;
-int score = 0;
 void display(void)
 {
 
@@ -70,20 +77,45 @@ void display(void)
    glMatrixMode (GL_MODELVIEW);
   
    // 以下はsample-cube.cのコピペ
+   // xが奥、zが右手前、yが上
    
    glColor3f (0.5, 0.3, 0.0);
-   glLoadIdentity ();             /* clear the matrix */
+   //glLoadIdentity ();             /* clear the matrix */
            /* viewing transformation  */
    //gluLookAt (0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     // glTranslatef(0, 0, -5.0);
    
-   gluLookAt(3, 3, 3, 0, 0, 0, 0, 1, 0);
+   //gluLookAt(3, 1, 1, 0, 0, 0, 0, 1, 0);
    //gluLookAt(0, 0, 0, -3, -3, -3, 0, 1, 0);
    //glTranslatef(-3, -3, -3);
 
    //glScalef (1.0, 2.0, 1.0);      /* modeling transformation */
-   glTranslatef(0, z, 0);
+
+   glLoadIdentity();
+   look();
+   glTranslatef(0, y, 0);
    glutWireCube (1.0);
+
+
+   glLoadIdentity();
+   look();
+   glTranslatef(5, 0, 0);
+   glRotatef(45, 1, 0, 0);
+   glutWireCube(0.5);
+
+   glLoadIdentity();
+   glColor3f(0, 0, 0);
+   look();
+   glBegin(GL_LINE_STRIP);
+   glVertex3f(0, -3, 0);
+   glVertex3f(0, 3, 0);
+   glVertex3f(10, 3, 0);
+   glVertex3f(10, -3, 0);
+   glVertex3f(0, -3, 0);
+   glVertex3f(0, 0, 0);
+   glVertex3f(10, 0, 0);
+   glEnd();
+   
 
    //   glColor3f(1, 1, 1);
    //glutSolidCube(1.0);
@@ -146,18 +178,7 @@ void keyboard(unsigned char key, int x, int y)
 }
 
 void update(){
-  if(read_serial()){
-    z = (serial_distance - 3) / 10;
-    z = 2.5 * (1 - exp(-z));
-    printf("%f -> %f\n", serial_distance, z);
-
-    if(serial_distance_trigger(10) == -1){
-      score++;
-    }
-    if(serial_button_trigger() == -1){
-      score += 3;
-    }
-  
+  if(game_update()){
     glutPostRedisplay();
   }
 }
@@ -165,7 +186,7 @@ void update(){
 int main(int argc, char** argv)
 {
   if(!init_serial()){
-    return 1;
+    //return 1;
   }
 
   
