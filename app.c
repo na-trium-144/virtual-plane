@@ -51,175 +51,175 @@
 #include <math.h>
 #include <string.h>
 
-void init(void)
-{
-  glClearColor (0, 0, 0, 0);
-   glShadeModel (GL_FLAT);
-}
-
 double aspect = 1;
 int width = 1280, height = 960;
 
 void display_text(double r, double g, double b, int x, const char *str, double s){
-  glLoadIdentity();
-  glColor3f(r, g, b);
-  glTranslatef(width / 2, height / 2, 0);
-  glRasterPos2f(x, -9);
-  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, str);
-  glBegin(GL_LINE_LOOP);
-  glVertex2f(-100, -30);
-  glVertex2f(-100, 30);
-  glVertex2f(100, 30);
-  glVertex2f(100, -30);
-  glEnd();
-     
-  glBegin(GL_LINES);
-  glVertex2f(-90, -20);
-  glVertex2f(-90 + 180 * s, -20);
-  glEnd();
+  glPushMatrix();
+  {
+    glColor3f(r, g, b);
+    glTranslatef(width / 2, height / 2, 0);
+
+    glRasterPos2f(x, -9);
+    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, str);
+    glBegin(GL_LINE_LOOP);
+    {
+      glVertex2f(-100, -30);
+      glVertex2f(-100, 30);
+      glVertex2f(100, 30);
+      glVertex2f(100, -30);
+    }
+    glEnd();
+    glBegin(GL_LINES);
+    {
+      glVertex2f(-90, -20);
+      glVertex2f(-90 + 180 * s, -20);
+    }
+    glEnd();
+  }
+  glPopMatrix();
 }
 
 void display(void)
 {
 
-   glClear (GL_COLOR_BUFFER_BIT);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode (GL_PROJECTION);
-   glLoadIdentity ();
-   // glFrustum (-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
-   gluPerspective(60, aspect, 1.5, 20);
+  glLoadIdentity ();
+  // glFrustum (-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
+  gluPerspective(60, aspect, 1.5, 20);
 
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity();
   // default 0,0,0 -> z- (up= y+)
-  glTranslatef(-4, 0, 0); // 原点を左に移動する
   // eye -> center, (up)
-  gluLookAt(-2, 0, 7, 0, 0, 0, 0, 1, 0);
+  gluLookAt(-1, 0, 7, 3, 0, 0, 0, 1, 0);
 
-   glMatrixMode (GL_MODELVIEW);
-  
-   // 以下はsample-cube.cのコピペ
-   // xが奥、zが右手前、yが上
-   
-   //glLoadIdentity ();             /* clear the matrix */
-           /* viewing transformation  */
-   //gluLookAt (0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    // glTranslatef(0, 0, -5.0);
-   
-   //gluLookAt(3, 1, 1, 0, 0, 0, 0, 1, 0);
-   //gluLookAt(0, 0, 0, -3, -3, -3, 0, 1, 0);
-   //glTranslatef(-3, -3, -3);
+  // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter3/index.html
+  // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter5/index.html
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_COLOR_MATERIAL);
+  static float light0[4][4]={{3, 1, 7, 1.0}, //position
+                      {0.04, 0.04, 0.04, 1}, //ambient
+                      {0.6, 0.6, 0.6, 1}, //diffuse
+                      {0.8, 0.8, 0.8, 1}}; //specular
+  glLightfv(GL_LIGHT0, GL_POSITION, light0[0]);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, light0[1]);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light0[2]);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, light0[3]);
 
-   //glScalef (1.0, 2.0, 1.0);      /* modeling transformation */
+  glEnable(GL_DEPTH_TEST);
 
-   // 自機
-   glLoadIdentity();
-   glTranslatef(0, y, 0);
-   if(fabs(y) < Y_RANGE){
-     glColor3f (0.3, 0.6, 1);
-   }else{
-     // 範囲外だよ 色を変える
-     glColor3f(0.1, 0.1, 0.3);
-   }
-   
-   glutWireCube (1.0);
+  // xが右奥、zが左奥、yが上
+  glPushMatrix();
+  {
+    // 自機
+    glTranslatef(0, y, 0);
 
-   // 奥のものから順に描画する
-   for(int i = game_obj_current; i > game_obj_current - GAME_OBJ_NUM; i--){
-     struct GameObj *g = &game_obj[(i + GAME_OBJ_NUM) % GAME_OBJ_NUM];
-     if(g->score_t > 0){
-       // オブジェクトごとの点数表示
-       char score_text[20];
-       sprintf(score_text, "%d", g->score);
-       glLoadIdentity();
-       glColor3f(1, 1, 1);
-       glRasterPos3f(0, g->score_y + 0.5, 0);
-       glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
-     }
+    if(fabs(y) < Y_RANGE){
+      glColor3f (0.3, 0.6, 1);
+    }else{
+      // 範囲外だよ 色を変える
+      glColor3f(0.1, 0.1, 0.3);
+    }
+    glutSolidSphere(0.5, 50, 50);
+  }
+  glPopMatrix();
 
-     if(g->kind == g_none){
-       continue;
-     }
+  // 奥のものから順に描画する
+  for(int i = game_obj_current; i > game_obj_current - GAME_OBJ_NUM; i--){
+    struct GameObj *g = &game_obj[(i + GAME_OBJ_NUM) % GAME_OBJ_NUM];
+    if(g->score_t > 0){
+      // オブジェクトごとの点数表示
+      char text[20];
+      sprintf(text, "%d", g->score);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_DEPTH_TEST);
+      glColor3f(1, 1, 1);
+      glRasterPos3f(0, g->score_y + 0.5, 0);
+      glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
+      glEnable(GL_LIGHTING);
+      glEnable(GL_DEPTH_TEST);
+    }
+
+    if(g->kind == g_none){
+      continue;
+    }
      
-     glLoadIdentity();
-     glTranslatef(g->x, g->y, 0);
-     glRotatef(g->t * 90, 1, 0.7, 0);
-     switch(g->kind){
-     case g_block:
-       glColor3f(1, 0.8, 0.7);
-       glutSolidCube(0.5);
-       break;
-     case g_coin:
-       glColor3f(1, 1, 0.3);
-       // innerR, outerR, nsides, rings
-       glutSolidTorus(0.05, 0.4, 8, 20);
-       break;
-     }
-   }
+    glPushMatrix();
+    {
+      glTranslatef(g->x, g->y, 0);
+      glRotatef(g->t * 90, 1, 0.7, 0);
+
+      switch(g->kind){
+      case g_block:
+        glColor3f(1, 0.8, 0.7);
+        glutSolidCube(0.5);
+        break;
+      case g_coin:
+        glColor3f(1, 1, 0.3);
+        // innerR, outerR, nsides, rings
+        glutSolidTorus(0.05, 0.4, 8, 20);
+        break;
+      default:
+      }
+    }
+    glPopMatrix();
+  }
+
+  glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHT0);
+  glDisable(GL_COLOR_MATERIAL);
+
+  // glLoadIdentity();
+  glColor3f(0.3, 0.3, 0.3);
+  glBegin(GL_LINE_STRIP);
+  {
+    glVertex3f(0, -3, 0);
+    glVertex3f(0, 3, 0);
+    glVertex3f(10, 3, 0);
+    glVertex3f(10, -3, 0);
+    glVertex3f(0, -3, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, 0, 3);
+  }
+  glEnd();
    
-   glLoadIdentity();
-   glColor3f(0.3, 0.3, 0.3);
-   glBegin(GL_LINE_STRIP);
-   glVertex3f(0, -3, 0);
-   glVertex3f(0, 3, 0);
-   glVertex3f(10, 3, 0);
-   glVertex3f(10, -3, 0);
-   glVertex3f(0, -3, 0);
-   glVertex3f(0, 0, 0);
-   glVertex3f(10, 0, 0);
-   glEnd();
-   
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, width, 0, height);
 
-   //   glColor3f(1, 1, 1);
-   //glutSolidCube(1.0);
-   //glColor3f(0.5, 0.3, 0);
-   //glutWireCube(1);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  char text[20];
 
-   //glColor3f(0, 0, 0);
-   //glTranslatef(0, 0, -2); // -3, -3, -5 に描かれる
-   //glScalef(0.5, 0.25, 0.5); // 0.5, 0.5, 0.5 にする
-   //glutWireDodecahedron();
+  glColor3f(1, 1, 1);
+  glRasterPos2f(10, 35);
+  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
+  glRasterPos2f(80, 35);
+  sprintf(text, "%d", score);
+  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
+  glRasterPos2f(10, 10);
+  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "HiScore:");
+  glRasterPos2f(100, 10);
+  sprintf(text, "%d", hiscore);
+  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
 
-   //glColor3f(1, 0, 0);
-   //glTranslatef(-7, -2, 2); // -10, -5, -3 (←なんか違いそう)
-   //glScalef(2, 2, 2); // 1, 1, 1 にする
-   //glRotatef(-90, 1, 0, 0);
-   //glutWireCone(0.5, 2, 30, 30);
-   
-   //glFlush ();
+  if(game_state == g_over){
+    display_text(1, 0.2, 0.2, -60, "Game Over", 0);
+  }
+  if(game_state == g_ready){
+    display_text(0.2, 0.7, 1, -35, "Ready?", game_main_t / READY_T);
+  }
+  if(game_state == g_main && game_main_t < 1.5){
+    display_text(1, 0.7, 0.2, -30, "Start!", 0);
+  }
 
+  glFlush();
 
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   gluOrtho2D(0, width, 0, height);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   
-   glColor3f(1, 1, 1);
-   glRasterPos2f(10, 35);
-   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
-   glRasterPos2f(80, 35);
-   char score_text[20];
-   sprintf(score_text, "%d", score);
-   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
-
-   glRasterPos2f(10, 10);
-   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "HiScore:");
-   glRasterPos2f(100, 10);
-   sprintf(score_text, "%d", hiscore);
-   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
-
-   if(game_state == g_over){
-     display_text(1, 0.2, 0.2, -60, "Game Over", 0);
-   }
-   if(game_state == g_ready){
-     display_text(0.2, 0.7, 1, -35, "Ready?", game_main_t / READY_T);
-   }
-   if(game_state == g_main && game_main_t < 1.5){
-     display_text(1, 0.7, 0.2, -30, "Start!", 0);
-   }
-
-   glFlush();
-   
-   glutSwapBuffers();
+  glutSwapBuffers();
 }
 
 void reshape (int w, int h)
@@ -266,11 +266,12 @@ int main(int argc, char** argv)
   init_game();
   
   glutInit(&argc, argv);
-  glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
+  glutInitDisplayMode (GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);
   glutInitWindowSize(width, height);
   glutInitWindowPosition (100, 100);
   glutCreateWindow (argv[0]);
-  init ();
+  glClearColor (0, 0, 0, 0);
+  glShadeModel (GL_FLAT);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
