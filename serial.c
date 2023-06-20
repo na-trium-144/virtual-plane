@@ -72,7 +72,7 @@ int read_serial_line(){
 	current_pos = 0;
 	tmp_pos += 1;
 	if(current_len > 0){
-	  printf("%s\n", serial_buf);
+	  //	  printf("%s\n", serial_buf);
 	  return current_len;
 	}
       }else if(buf[tmp_pos] == '\r'){

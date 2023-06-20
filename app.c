@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 void init(void)
 {
@@ -59,6 +60,26 @@ void init(void)
 
 double aspect = 1;
 int width = 1280, height = 960;
+
+void display_text(double r, double g, double b, int x, const char *str, double s){
+  glLoadIdentity();
+  glColor3f(r, g, b);
+  glTranslatef(width / 2, height / 2, 0);
+  glRasterPos2f(x, -9);
+  glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, str);
+  glBegin(GL_LINE_LOOP);
+  glVertex2f(-100, -30);
+  glVertex2f(-100, 30);
+  glVertex2f(100, 30);
+  glVertex2f(100, -30);
+  glEnd();
+     
+  glBegin(GL_LINES);
+  glVertex2f(-90, -20);
+  glVertex2f(-90 + 180 * s, -20);
+  glEnd();
+}
+
 void display(void)
 {
 
@@ -102,8 +123,9 @@ void display(void)
    
    glutWireCube (1.0);
 
-
-   for(struct GameObj *g = game_obj; g < game_obj + GAME_OBJ_NUM; g++){
+   // 奥のものから順に描画する
+   for(int i = game_obj_current; i > game_obj_current - GAME_OBJ_NUM; i--){
+     struct GameObj *g = &game_obj[(i + GAME_OBJ_NUM) % GAME_OBJ_NUM];
      if(g->score_t > 0){
        // オブジェクトごとの点数表示
        char score_text[20];
@@ -132,10 +154,8 @@ void display(void)
        glutSolidTorus(0.05, 0.4, 8, 20);
        break;
      }
-     
-     
    }
-
+   
    glLoadIdentity();
    glColor3f(0.3, 0.3, 0.3);
    glBegin(GL_LINE_STRIP);
@@ -175,13 +195,6 @@ void display(void)
    glLoadIdentity();
    
    glColor3f(1, 1, 1);
-   /*   glBegin(GL_POLYGON);
-   glVertex3f(0, 0, 0);
-   glVertex3f(0, 0.3, 0);
-   glVertex3f(0.3, 0.3, 0);
-   glVertex3f(0.3, 0, 0);
-   glEnd();
-   */
    glRasterPos2f(10, 10);
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
    glRasterPos2f(80, 10);
@@ -189,18 +202,14 @@ void display(void)
    sprintf(score_text, "%d", score);
    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, score_text);
 
-   if(game_over){
-     glLoadIdentity();
-     glColor3f(1, 0.2, 0.2);
-     glTranslatef(width / 2, height / 2, 0);
-     glRasterPos2f(-70, -9);
-     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "GAME OVER");
-     glBegin(GL_LINE_LOOP);
-     glVertex2f(-100, -30);
-     glVertex2f(-100, 30);
-     glVertex2f(100, 30);
-     glVertex2f(100, -30);
-     glEnd();
+   if(game_state == g_over){
+     display_text(1, 0.2, 0.2, -70, "GAME OVER", 0);
+   }
+   if(game_state == g_ready){
+     display_text(0.2, 0.7, 1, -45, "READY?", game_main_t / READY_T);
+   }
+   if(game_state == g_main && game_main_t < 1.5){
+     display_text(1, 0.7, 0.2, -43, "START!", 0);
    }
 
    glFlush();
@@ -237,7 +246,7 @@ int main(int argc, char** argv)
   if(!init_serial()){
     //return 1;
   }
-
+  srand((unsigned int)time(NULL));
   
    glutInit(&argc, argv);
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
