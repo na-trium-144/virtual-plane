@@ -51,6 +51,8 @@
 #include <math.h>
 #include <string.h>
 
+// #define SHOW_GRID
+
 double aspect = 1;
 int width = 1280, height = 960;
 
@@ -98,11 +100,12 @@ void display(void)
 
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter3/index.html
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter5/index.html
+  // https://stackoverflow.com/questions/55338066/how-do-i-make-opengl-specular-light-work
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_COLOR_MATERIAL);
-  static float light0[4][4]={{3, 1, 7, 1.0}, //position
-                      {0.04, 0.04, 0.04, 1}, //ambient
+  static float light0[4][4]={{1, 1, 3, 1}, //position
+                      {0.2, 0.2, 0.2, 1}, //ambient
                       {0.6, 0.6, 0.6, 1}, //diffuse
                       {0.8, 0.8, 0.8, 1}}; //specular
   glLightfv(GL_LIGHT0, GL_POSITION, light0[0]);
@@ -112,19 +115,47 @@ void display(void)
 
   glEnable(GL_DEPTH_TEST);
 
-  // xが右奥、zが左奥、yが上
+  // xが右奥、zが右前、yが上
   glPushMatrix();
   {
     // 自機
     glTranslatef(0, y, 0);
+    // いい感じに見えるようにatanの引数を調整する
+    glRotatef(atan(vy / Y_RANGE / 4) * 180 / 3.14, 0, 0, -1);
 
     if(fabs(y) < Y_RANGE){
-      glColor3f (0.3, 0.6, 1);
+      glColor3f (0.5, 0.8, 1);
     }else{
       // 範囲外だよ 色を変える
-      glColor3f(0.1, 0.1, 0.3);
+      glColor3f(0.1, 0.2, 0.3);
     }
-    glutSolidSphere(0.5, 50, 50);
+    // glutSolidSphere(0.5, 50, 50);
+
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glBegin(GL_TRIANGLES);
+    {
+      glNormal3f(0, 1, 0);
+      glVertex3f(0.5, 0.2, 0);
+      glVertex3f(-0.5, 0.2, 0.1);
+      glVertex3f(-0.5, 0.2, 0.5);
+
+      glNormal3f(0, 1, 0);
+      glVertex3f(0.5, 0.2, 0);
+      glVertex3f(-0.5, 0.2, -0.5);
+      glVertex3f(-0.5, 0.2, -0.1);
+
+      glNormal3f(0, 0, -1);
+      glVertex3f(0.5, 0.2, 0);
+      glVertex3f(-0.5, -0.2, 0);
+      glVertex3f(-0.5, 0.2, 0.1);
+
+      glNormal3f(0, 0, 1);
+      glVertex3f(0.5, 0.2, 0);
+      glVertex3f(-0.5, 0.2, -0.1);
+      glVertex3f(-0.5, -0.2, 0);
+    }
+    glEnd();
+
   }
   glPopMatrix();
 
@@ -136,7 +167,7 @@ void display(void)
       char text[20];
       sprintf(text, "%d", g->score);
       glDisable(GL_LIGHTING);
-      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_DEPTH_TEST); // これは常に手前に表示する
       glColor3f(1, 1, 1);
       glRasterPos3f(0, g->score_y + 0.5, 0);
       glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
@@ -161,7 +192,7 @@ void display(void)
       case g_coin:
         glColor3f(1, 1, 0.3);
         // innerR, outerR, nsides, rings
-        glutSolidTorus(0.05, 0.4, 8, 20);
+        glutSolidTorus(0.05, 0.3, 8, 20);
         break;
       default:
       }
@@ -173,7 +204,7 @@ void display(void)
   glDisable(GL_LIGHT0);
   glDisable(GL_COLOR_MATERIAL);
 
-  // glLoadIdentity();
+#ifdef SHOW_GRID
   glColor3f(0.3, 0.3, 0.3);
   glBegin(GL_LINE_STRIP);
   {
@@ -186,7 +217,8 @@ void display(void)
     glVertex3f(0, 0, 3);
   }
   glEnd();
-   
+#endif
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluOrtho2D(0, width, 0, height);

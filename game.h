@@ -1,4 +1,4 @@
-extern double y;
+extern double y, vy;
 extern int score, hiscore;
 void init_game();
 int game_update();

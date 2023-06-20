@@ -12,7 +12,7 @@
 #define D_MIN 5
 #define D_MAX 15
 
-double y = 0;
+double y = 0, vy = 0;
 int score = 0;
 int hiscore = 0;
 
@@ -54,7 +54,7 @@ double rand1(){
   return rand() * 1.0 / RAND_MAX;
 }
 
-void move_myship(){
+void move_myship(double sec_diff){
   double yp;
   if(use_mouse){
     yp = (0.5 - mouse_y_rat) * 3;
@@ -67,7 +67,9 @@ void move_myship(){
   if(yp > 1){
     yp = 1;
   }
-  y = yp * Y_RANGE;
+  double new_y = yp * Y_RANGE;
+  vy = (y - new_y) / sec_diff;
+  y = new_y;
 }
 
 void obj_check(double sec_diff){
@@ -147,10 +149,11 @@ int game_update(){
 
   int mouse_click_trigger = mouse_clicked && !mouse_clicked_prev;
   mouse_clicked_prev = mouse_clicked;
+  mouse_clicked = 0;
 
   switch(game_state){
   case g_ready:
-    move_myship();
+    move_myship(sec_diff);
     if(fabs(y) < Y_RANGE){
       game_main_t += sec_diff;
       if(game_main_t >= READY_T){ // 1.5秒間画面内にすればスタート
@@ -174,7 +177,7 @@ int game_update(){
     }
     break;
   case g_main:
-    move_myship();
+    move_myship(sec_diff);
     game_main_t += sec_diff;
     obj_check(sec_diff);
     if(rand1() < 1.0 / 60){
