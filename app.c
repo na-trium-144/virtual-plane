@@ -57,13 +57,6 @@ void init(void)
    glShadeModel (GL_FLAT);
 }
 
-void look(){
-  // default 0,0,0 -> z- (up= y+)
-  glTranslatef(-2.5, 0, 0); // 原点を左に移動する
-  // eye -> center, (up)
-  gluLookAt(-4, 0, 7, 0, 0, 0, 0, 1, 0);
-}
-
 double aspect = 1;
 void display(void)
 {
@@ -74,6 +67,12 @@ void display(void)
    glLoadIdentity ();
    // glFrustum (-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
    gluPerspective(60, aspect, 1.5, 20);
+
+  // default 0,0,0 -> z- (up= y+)
+  glTranslatef(-4, 0, 0); // 原点を左に移動する
+  // eye -> center, (up)
+  gluLookAt(-2, 0, 7, 0, 0, 0, 0, 1, 0);
+
    glMatrixMode (GL_MODELVIEW);
   
    // 以下はsample-cube.cのコピペ
@@ -92,20 +91,17 @@ void display(void)
    //glScalef (1.0, 2.0, 1.0);      /* modeling transformation */
 
    glLoadIdentity();
-   look();
    glTranslatef(0, y, 0);
    glutWireCube (1.0);
 
 
    glLoadIdentity();
-   look();
    glTranslatef(5, 0, 0);
    glRotatef(45, 1, 0, 0);
    glutWireCube(0.5);
 
    glLoadIdentity();
    glColor3f(0, 0, 0);
-   look();
    glBegin(GL_LINE_STRIP);
    glVertex3f(0, -3, 0);
    glVertex3f(0, 3, 0);
@@ -192,7 +188,7 @@ int main(int argc, char** argv)
   
    glutInit(&argc, argv);
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
-   glutInitWindowSize (500, 500);
+   glutInitWindowSize (1280, 960);
    glutInitWindowPosition (100, 100);
    glutCreateWindow (argv[0]);
    init ();
