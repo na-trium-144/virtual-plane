@@ -1,11 +1,15 @@
 extern double y, vy;
-extern int score, hiscore;
+extern double score;
+extern int hiscore;
 void init_game();
 int game_update();
 #define Y_RANGE 3
-#define X_RANGE 10
+#define X_RANGE 15
+#define BPM 148
+// bgmのbpmにあわせて変える
+#define TIME_SCORE_RATE (1 / (60.0 / BPM))
 
-#define READY_T (60.0 / 148 * 4) // bgmのbpmにあわせて変える
+#define READY_T (60.0 / BPM * 4)
 enum GameState { g_title, g_ready, g_main, g_over, };
 extern enum GameState game_state;
 extern double game_main_t;

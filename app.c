@@ -54,8 +54,9 @@
 
 // #define SHOW_GRID
 
-double aspect = 1;
 int width = 1280, height = 960;
+double aspect = 16.0 / 9;
+// int width = 800, height = 450;
 
 void display_text(double r, double g, double b, int x, const char *str, double s){
   glPushMatrix();
@@ -128,7 +129,7 @@ void display(void)
   glLoadIdentity();
   // default 0,0,0 -> z- (up= y+)
   // eye -> center, (up)
-  gluLookAt(-1, 0, 7, 3, 0, 0, 0, 1, 0);
+  gluLookAt(2.5, -0.5, 7, 4, 0, 0, 0, 1, 0);
 
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter3/index.html
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter5/index.html
@@ -136,10 +137,10 @@ void display(void)
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_COLOR_MATERIAL);
-  static float light0[4][4]={{1, 1, 3, 1}, //position
-                      {0.1, 0.1, 0.1, 1}, //ambient
-                      {1.0, 1.0, 1.0, 1}, //diffuse
-                      {0.6, 0.6, 0.6, 1}}; //specular
+  static float light0[4][4]={{1, 10, 1, 0}, //position
+                      {0.2, 0.2, 0.2, 1}, //ambient
+                      {0.8, 0.8, 0.8, 1}, //diffuse
+                      {0.4, 0.4, 0.4, 1}}; //specular
   glLightfv(GL_LIGHT0, GL_POSITION, light0[0]);
   glLightfv(GL_LIGHT0, GL_AMBIENT, light0[1]);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, light0[2]);
@@ -238,15 +239,24 @@ void display(void)
 
 #ifdef SHOW_GRID
   glColor3f(0.3, 0.3, 0.3);
-  glBegin(GL_LINE_STRIP);
+  glBegin(GL_LINES);
   {
-    glVertex3f(0, -3, 0);
-    glVertex3f(0, 3, 0);
-    glVertex3f(10, 3, 0);
-    glVertex3f(10, -3, 0);
-    glVertex3f(0, -3, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 3);
+    glVertex3f(0, -Y_RANGE, 0);
+    glVertex3f(0, Y_RANGE, 0);
+    glVertex3f(X_RANGE / 3, -Y_RANGE, 0);
+    glVertex3f(X_RANGE / 3, Y_RANGE, 0);
+    glVertex3f(X_RANGE * 2 / 3, -Y_RANGE, 0);
+    glVertex3f(X_RANGE * 2 / 3, Y_RANGE, 0);
+    glVertex3f(X_RANGE, -Y_RANGE, 0);
+    glVertex3f(X_RANGE, Y_RANGE, 0);
+    for(double y = -Y_RANGE; y <= Y_RANGE + .1; y +=0.5){
+      glVertex3f(0, y, 0);
+      glVertex3f(X_RANGE, y, 0);
+    }
+    for(double x = -1; x <= X_RANGE + .1; x +=0.5){
+      glVertex3f(x, 0, -5);
+      glVertex3f(x, 0, 5);
+    }
   }
   glEnd();
 #endif
@@ -263,7 +273,7 @@ void display(void)
   glRasterPos2f(10, 35);
   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "Score:");
   glRasterPos2f(80, 35);
-  sprintf(text, "%d", score);
+  sprintf(text, "%d", (int)(score));
   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
   glRasterPos2f(10, 10);
   glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "HiScore:");
@@ -282,7 +292,7 @@ void display(void)
     display_text(0.2, 0.7, 1, -35, "Ready?", game_main_t / READY_T);
     break;
   case g_main:
-    if(game_main_t < 1.5){
+    if(game_main_t < READY_T / 2){
       display_text(1, 0.7, 0.2, -30, "Start!", 0);
     }
     break;

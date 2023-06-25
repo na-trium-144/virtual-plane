@@ -14,7 +14,7 @@
 #define D_MAX 15
 
 double y = 0, vy = 0;
-int score = 0;
+double score = 0;
 int hiscore = 0;
 
 double mouse_x_rat, mouse_y_rat;
@@ -35,6 +35,7 @@ void init_game(){
   bgm_change(g_title);
 }
 void save_score(){
+  score = (double)(int)(score);
   if(score > hiscore){
     hiscore = score;
     int f = open("hiscore.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -102,43 +103,45 @@ void obj_check(double sec_diff){
       g->y -= g->vy * sec_diff;
       g->t += sec_diff;
       if(fabs(g->x) <= 0.5 && fabs(g->y - y) <= 0.5){
-	// 自機に衝突
-	g->hit_me = 1;
-	switch(g->kind){
-	case g_block:
-    state_change(g_over);
-	  save_score();
-	  break;
-	case g_coin:
-	  g->score = 100;
-	  score += g->score;
-	  g->score_t = 0.5;
-	  g->kind = g_none;
-    g->score_y = g->y;
-    se_play(se_coin);
-	  break;
-  case g_none:
-	}
+        // 自機に衝突
+        g->hit_me = 1;
+        switch(g->kind){
+        case g_block:
+          state_change(g_over);
+          save_score();
+          break;
+        case g_coin:
+          g->score = 100;
+          score += g->score;
+          g->score_t = 0.5;
+          g->kind = g_none;
+          g->score_y = g->y;
+          se_play(se_coin);
+          break;
+        case g_none:
+        }
       }
       if(g->x < -0.5 && gx_prev >= -0.5){
-	// 自機通過
-	if(fabs(y) < Y_RANGE){
-	  switch(g->kind){
-	  case g_block:
-	    g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 50);
-	    score += g->score;
-	    g->score_t = 0.5;
-      g->score_y = g->y;
-	    break;
-	  case g_coin:
-	    break;
-    case g_none:
-	  }
-	}
+        // 自機通過
+        if(fabs(y) < Y_RANGE){
+          switch(g->kind){
+          case g_block:
+      // 自機に近いほど点数が高い
+/*          g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 50);
+            score += g->score;
+            g->score_t = 0.5;
+            g->score_y = g->y;
+*/
+            break;
+          case g_coin:
+            break;
+          case g_none:
+          }
+        }
       }
       if(g->x < -3){
-	// 画面外
-	g->kind = g_none;
+        // 画面外
+        g->kind = g_none;
       }
     }
   }
@@ -201,14 +204,18 @@ int game_update(){
   case g_main:
     move_myship(sec_diff);
     game_main_t += sec_diff;
+    if(fabs(y) < Y_RANGE){
+      // 自機が範囲内なら時間で点数増える
+      score += sec_diff * TIME_SCORE_RATE;
+    }
     obj_check(sec_diff);
     if(rand1() < 1.0 / 60){
       struct GameObj *g = &game_obj[game_obj_current];
       game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
       if(rand1() < 0.7){
-	g->kind = g_block;
+        g->kind = g_block;
       }else{
-	g->kind = g_coin;
+        g->kind = g_coin;
       }
       g->x = X_RANGE;
       g->vx = 1.0 + 5.0 * rand1(); // 1〜6 
