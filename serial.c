@@ -20,9 +20,10 @@ int serial_button, serial_button_prev;
 
 // serial_portの初期化
 int init_serial(){
-  serial_port = open("/dev/ttyUSB0", O_RDWR);
+  const char* dev = "/dev/ttyUSB0";
+  serial_port = open(dev, O_RDWR);
   if ( serial_port < 0 ) {
-    printf("Error %i from open: %s\n", errno, strerror(errno));
+    printf("Error %i from open %s: %s\n", errno, dev, strerror(errno));
     return 0;
   }
   struct termios tty;
