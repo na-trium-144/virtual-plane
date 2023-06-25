@@ -46,6 +46,7 @@
 
 #include "serial.h"
 #include "game.h"
+#include "audio.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -333,6 +334,8 @@ int main(int argc, char** argv)
     printf("using mouse instead\n");
     use_mouse = 1;
   }
+  init_wav();
+  init_pa();
   init_game();
   
   glutInit(&argc, argv);

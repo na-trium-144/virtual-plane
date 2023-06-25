@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "game.h"
 #include "audio.h"
 
 // 44100Hz, 16bitにすること
 #define SAMPLE_RATE 44100
 #define BGM_NUM 7
-#define SE_NUM 0
+#define SE_NUM 5
 #define WAV_NUM (BGM_NUM + SE_NUM)
 const char *wav_name[WAV_NUM] = {
     "./wav/bgm_0.wav", // 25
@@ -20,16 +21,46 @@ const char *wav_name[WAV_NUM] = {
     "./wav/bgm_4.wav",
     "./wav/bgm_5.wav",
     "./wav/bgm_6.wav",
+    "./wav/vf_ready.wav",
+    "./wav/vf_coin.wav",
+    "./wav/vf_shoot.wav",
+    "./wav/vf_hit.wav",
+    "./wav/vf_yakan.wav",
 };
 int16_t *wav_bgm[WAV_NUM];
 int16_t *wav_start[WAV_NUM], *wav_end[WAV_NUM], *wav_current[WAV_NUM];
 
 int wav_flag[WAV_NUM];
-void se_play(int c){
+int bgm_fade = 0;
+#define BGM_FADE_T 1
+double bgm_vol_current = 1;
+double bgm_end_loop = 1; // タイトルではbgmの1ループが短い
+int hidden_bgm2(){
+    // se再生中はbgm2を止める
+    for(int c = 0; c < SE_NUM; c++){
+        if(wav_flag[c + BGM_NUM]){
+            return 1;
+        }
+    }
+    return 0;
+}
+void se_play(enum se c){
     wav_current[c + BGM_NUM] = wav_start[c + BGM_NUM];
     wav_flag[c + BGM_NUM] = 1;
 }
+void bgm_stop(){
+    for(int c = 0; c < BGM_NUM; c++){
+        wav_flag[c] = 0;
+    }
+    wav_flag[BGM_NUM + se_ready] = 0;
+}
 void bgm_change(enum GameState g){
+    if(g == g_ready){
+        se_play(se_ready);
+    }
+    bgm_fade = g == g_over;
+    bgm_vol_current = 1;
+    bgm_end_loop = g == g_title ? 1.0 / 6 : 1;
     for(int c = 0; c < BGM_NUM; c++){
         int f;
         switch(g){
@@ -94,12 +125,22 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     
     for(size_t i = 0; i < framesPerBuffer; i++ )
     {
-        int16_t out_l = 0, out_r = 0;
+        int32_t out_l = 0, out_r = 0;
         for(int c = 0; c < WAV_NUM; c++){
             if(wav_flag[c]){
-                out_l += *(wav_current[c]++);
-                out_r += *(wav_current[c]++);
-                if(wav_current[c] >= wav_end[c]){
+                int16_t out_l1, out_r1;
+                out_l1 = *(wav_current[c]++);
+                out_r1 = *(wav_current[c]++);
+                if(c < BGM_NUM){
+                    out_l1 *= bgm_vol_current;
+                    out_r1 *= bgm_vol_current;
+                }
+                if(!(c == 2 && hidden_bgm2())){
+                    out_l += out_l1;
+                    out_r += out_r1;
+                }
+                int16_t *end = wav_start[c] + (size_t)((wav_end[c] - wav_start[c]) * bgm_end_loop);
+                if(wav_current[c] >= end){
                     wav_current[c] = wav_start[c];
                     if(c >= BGM_NUM){
                         // seは終わったら止める
@@ -108,8 +149,27 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
                 }
             }
         }
+        if(out_l > 0x7fff){
+            out_l = 0x7fff;
+        }
+        if(out_l < -0x8000){
+            out_l = -0x8000;
+        }
+        if(out_r > 0x7fff){
+            out_r = 0x7fff;
+        }
+        if(out_r < -0x8000){
+            out_r = -0x8000;
+        }
         *(out++) = out_l;  /* left */
         *(out++) = out_r;  /* right */
+
+    }
+    if(bgm_fade){
+        bgm_vol_current -= framesPerBuffer / ((double)BGM_FADE_T * SAMPLE_RATE);
+        if(bgm_vol_current < 0){
+            bgm_vol_current = 0;
+        }
     }
     return 0;
 }

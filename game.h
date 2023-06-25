@@ -5,10 +5,11 @@ int game_update();
 #define Y_RANGE 3
 #define X_RANGE 10
 
-#define READY_T 1.5
+#define READY_T (60.0 / 148 * 4) // bgmのbpmにあわせて変える
 enum GameState { g_title, g_ready, g_main, g_over, };
 extern enum GameState game_state;
 extern double game_main_t;
+void state_change(enum GameState g);
 
 #define GAME_OBJ_NUM 50
 enum ObjKind { g_none = 0, g_block, g_coin, };
@@ -26,3 +27,8 @@ extern int game_obj_current;
 extern double mouse_x_rat, mouse_y_rat;
 extern int use_mouse;
 extern int mouse_clicked;
+
+void move_myship(double sec_diff);
+void obj_check(double sec_diff);
+void obj_clear();
+

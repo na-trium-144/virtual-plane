@@ -1,5 +1,6 @@
 #include "game.h"
 #include "serial.h"
+#include "audio.h"
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -30,6 +31,8 @@ void init_game(){
     hiscore = atoi(buf);
   }
   close(f);
+
+  bgm_change(g_title);
 }
 void save_score(){
   if(score > hiscore){
@@ -49,6 +52,18 @@ int game_obj_current;
 int game_over = 0;
 enum GameState game_state = g_title;
 double game_main_t = 0;
+void state_change(enum GameState g){
+  game_main_t = 0;
+  game_state = g;
+  bgm_change(g);
+  if(g == g_over){
+    save_score();
+  }
+  if(g == g_title){
+    score = 0;
+    obj_clear();
+  }
+}
 
 double rand1(){
   return rand() * 1.0 / RAND_MAX;
@@ -91,8 +106,7 @@ void obj_check(double sec_diff){
 	g->hit_me = 1;
 	switch(g->kind){
 	case g_block:
-	  game_state = g_over;
-	  game_main_t = 0;
+    state_change(g_over);
 	  save_score();
 	  break;
 	case g_coin:
@@ -101,6 +115,7 @@ void obj_check(double sec_diff){
 	  g->score_t = 0.5;
 	  g->kind = g_none;
     g->score_y = g->y;
+    se_play(se_coin);
 	  break;
   case g_none:
 	}
@@ -157,32 +172,30 @@ int game_update(){
   case g_title:
     move_myship(sec_diff);
     if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
-      game_main_t = 0;
-      game_state = g_ready;
+      state_change(g_ready);
     }
     break;
   case g_ready:
     move_myship(sec_diff);
     if(fabs(y) < Y_RANGE){
+      if(game_main_t == 0){
+        bgm_change(g_ready);
+      }
       game_main_t += sec_diff;
       if(game_main_t >= READY_T){ // 1.5秒間画面内にすればスタート
-	game_state = g_main;
-	game_main_t = 0;
+        state_change(g_main);
       }
     }else{
       game_main_t = 0;
+      bgm_stop();
     }
     if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
-      game_main_t = 0;
-      game_state = g_title;
+      state_change(g_title);
     }
     break;
   case g_over:
     if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
-      game_state = g_title;
-      game_main_t = 0;
-      score = 0;
-      obj_clear();
+      state_change(g_title);
     }
     break;
   case g_main:
