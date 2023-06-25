@@ -3,4 +3,5 @@
 *.o
 /app
 /serial
+/audio
 hiscore.txt
