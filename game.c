@@ -53,6 +53,7 @@ int game_obj_current;
 int game_over = 0;
 enum GameState game_state = g_title;
 double game_main_t = 0;
+double last_obj_appear = 0;
 void state_change(enum GameState g){
   game_main_t = 0;
   game_state = g;
@@ -63,6 +64,9 @@ void state_change(enum GameState g){
   if(g == g_title){
     score = 0;
     obj_clear();
+  }
+  if(g == g_main){
+    last_obj_appear = -1000; // てきとうに小さい値
   }
 }
 
@@ -152,6 +156,24 @@ void obj_clear(){
     g->kind = g_none;
   }
 }
+void obj_appear(){
+  struct GameObj *g = &game_obj[game_obj_current];
+  game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
+  if(rand1() < 0.7){
+    g->kind = g_block;
+  }else{
+    g->kind = g_coin;
+  }
+  g->x = X_RANGE;
+  g->vx = (2.0 + 2.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
+  g->y = (2 * rand1() - 1) * Y_RANGE;
+  g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
+  g->t = 0;
+  g->score = 0;
+  g->score_t = 0;
+  g->hit_me = 0;
+  printf("v = (%.3f, %.3f)\n", g->vx, g->vy);
+}
 
 int game_update(){
   static double sec_prev = 0;
@@ -209,22 +231,11 @@ int game_update(){
       score += sec_diff * TIME_SCORE_RATE;
     }
     obj_check(sec_diff);
-    if(rand1() < 1.0 / 60){
-      struct GameObj *g = &game_obj[game_obj_current];
-      game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
-      if(rand1() < 0.7){
-        g->kind = g_block;
-      }else{
-        g->kind = g_coin;
-      }
-      g->x = X_RANGE;
-      g->vx = 1.0 + 5.0 * rand1(); // 1〜6 
-      g->y = (2 * rand1() - 1) * Y_RANGE;
-      g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
-      g->t = 0;
-      g->score = 0;
-      g->score_t = 0;
-      g->hit_me = 0;
+    double obj_interval = 3 / (1 + game_main_t / BGM_1LOOP);
+    // BGM1周ごとに 1 → 1/2 → 1/3 ...となる
+    if(game_main_t - last_obj_appear > obj_interval){
+      obj_appear();
+      last_obj_appear = game_main_t;
     }
     break;
   }

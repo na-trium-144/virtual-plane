@@ -101,7 +101,7 @@ void display_title(double r, double g, double b){
     glRasterPos2f(-120, -40);
     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "< Press Button to Start >");
     
-    glRasterPos2f(-105, -120);
+/*    glRasterPos2f(-105, -120);
     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "--- How to Play ---");
     glRasterPos2f(-260, -180);
     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "1. Hold the circuit board with the sensor facing down,");
@@ -109,7 +109,7 @@ void display_title(double r, double g, double b){
     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "and move it to control the plane.");
     glRasterPos2f(-260, -250);
     glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, "2. Press the button to shoot.");
-
+*/
 
   }
   glPopMatrix();

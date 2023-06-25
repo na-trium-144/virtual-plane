@@ -6,6 +6,7 @@ int game_update();
 #define Y_RANGE 3
 #define X_RANGE 15
 #define BPM 148
+#define BGM_1LOOP (60.0 / BPM * 4 * 48)
 // bgmのbpmにあわせて変える
 #define TIME_SCORE_RATE (1 / (60.0 / BPM))
 
@@ -35,4 +36,4 @@ extern int mouse_clicked;
 void move_myship(double sec_diff);
 void obj_check(double sec_diff);
 void obj_clear();
-
+void obj_appear();
