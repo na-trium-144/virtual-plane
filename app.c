@@ -153,8 +153,7 @@ void display(void)
   {
     // 自機
     glTranslatef(0, y, 0);
-    // いい感じに見えるようにatanの引数を調整する
-    glRotatef(atan(vy / Y_RANGE / 4) * 180 / 3.14, 0, 0, -1);
+    glRotatef(-my_angle() * 180 / 3.14, 0, 0, -1);
 
     if(fabs(y) < Y_RANGE){
       glColor3f (0.5, 0.8, 1);
@@ -192,6 +191,7 @@ void display(void)
   }
   glPopMatrix();
 
+  // オブジェクト
   // 奥のものから順に描画する
   for(int i = game_obj_current; i > game_obj_current - GAME_OBJ_NUM; i--){
     struct GameObj *g = &game_obj[(i + GAME_OBJ_NUM) % GAME_OBJ_NUM];
@@ -202,7 +202,7 @@ void display(void)
       glDisable(GL_LIGHTING);
       glDisable(GL_DEPTH_TEST); // これは常に手前に表示する
       glColor3f(1, 1, 1);
-      glRasterPos3f(0, g->score_y + 0.5, 0);
+      glRasterPos3f(g->score_x, g->score_y + 0.5, 0);
       glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, text);
       glEnable(GL_LIGHTING);
       glEnable(GL_DEPTH_TEST);
@@ -229,6 +229,22 @@ void display(void)
         break;
       case g_none:
       }
+    }
+    glPopMatrix();
+  }
+  for(int i = game_bullet_current; i > game_bullet_current - GAME_BULLET_NUM; i--){
+    struct GameObj *g = &game_bullet[(i + GAME_BULLET_NUM) % GAME_BULLET_NUM];
+    if(g->kind == g_none){
+      continue;
+    }
+     
+    glPushMatrix();
+    {
+      glTranslatef(g->x, g->y, 0);
+      // glRotatef(g->t * 90, 1, 0.7, 0);
+      glColor3f(1, 0.5, 0.3);
+      // r, slices, stacks
+      glutSolidSphere(0.1, 10, 10);
     }
     glPopMatrix();
   }

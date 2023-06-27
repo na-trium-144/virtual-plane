@@ -16,6 +16,9 @@
 double y = 0, vy = 0;
 double score = 0;
 int hiscore = 0;
+double my_angle(){
+  return atan(vy / Y_RANGE / 4); // いい感じに見えるようパラメータを調整
+}
 
 double mouse_x_rat, mouse_y_rat;
 int use_mouse = 0;
@@ -48,8 +51,8 @@ void save_score(){
   }
 }
 
-struct GameObj game_obj[GAME_OBJ_NUM];
-int game_obj_current;
+struct GameObj game_obj[GAME_OBJ_NUM], game_bullet[GAME_BULLET_NUM];
+int game_obj_current = 0, game_bullet_current = 0;
 int game_over = 0;
 enum GameState game_state = g_title;
 double game_main_t = 0;
@@ -64,6 +67,7 @@ void state_change(enum GameState g){
   if(g == g_title){
     score = 0;
     obj_clear();
+    bullet_clear();
   }
   if(g == g_main){
     last_obj_appear = -1000; // てきとうに小さい値
@@ -88,10 +92,20 @@ void move_myship(double sec_diff){
     yp = 1;
   }
   double new_y = yp * Y_RANGE;
-  vy = (y - new_y) / sec_diff;
+  vy = (new_y - y) / sec_diff;
   y = new_y;
 }
 
+void move_bullet(double sec_diff){
+  for(struct GameObj *b = game_bullet; b < game_bullet + GAME_BULLET_NUM; b++){
+    if(b->kind == g_none){
+      continue;
+    }
+    b->x += b->vx * sec_diff;
+    b->y += b->vy * sec_diff;
+    b->t += sec_diff;
+  }
+}
 void obj_check(double sec_diff){
   for(struct GameObj *g = game_obj; g < game_obj + GAME_OBJ_NUM; g++){
     g->score_t -= sec_diff;
@@ -106,6 +120,25 @@ void obj_check(double sec_diff){
       g->x -= g->vx * sec_diff;
       g->y -= g->vy * sec_diff;
       g->t += sec_diff;
+      for(struct GameObj *b = game_bullet; b < game_bullet + GAME_BULLET_NUM; b++){
+        if(b->kind == g_bullet && fabs(b->x - g->x) <= 0.5 && fabs(b->y - g->y) <= 0.5){
+          // 弾に衝突
+          switch(g->kind){
+          case g_block:
+            g->score = (int)(80 * g->x / X_RANGE);
+            score += g->score;
+            g->kind = g_none;
+            g->score_x = g->x;
+            g->score_y = g->y;
+            g->score_t = 0.5;
+            se_play(se_hit);
+            b->kind = g_none;
+            break;
+          case g_coin:
+            break;
+          }
+        }
+      }
       if(fabs(g->x) <= 0.5 && fabs(g->y - y) <= 0.5){
         // 自機に衝突
         g->hit_me = 1;
@@ -119,6 +152,7 @@ void obj_check(double sec_diff){
           score += g->score;
           g->score_t = 0.5;
           g->kind = g_none;
+          g->score_x = 0;
           g->score_y = g->y;
           se_play(se_coin);
           break;
@@ -127,21 +161,8 @@ void obj_check(double sec_diff){
       }
       if(g->x < -0.5 && gx_prev >= -0.5){
         // 自機通過
-        if(fabs(y) < Y_RANGE){
-          switch(g->kind){
-          case g_block:
-      // 自機に近いほど点数が高い
-/*          g->score = (int)((1 - fabs(g->y - y) / (Y_RANGE * 2)) * 50);
-            score += g->score;
-            g->score_t = 0.5;
-            g->score_y = g->y;
-*/
-            break;
-          case g_coin:
-            break;
-          case g_none:
-          }
-        }
+        // if(fabs(y) < Y_RANGE){
+        // }
       }
       if(g->x < -3){
         // 画面外
@@ -155,6 +176,24 @@ void obj_clear(){
     g->score_t = 0;
     g->kind = g_none;
   }
+}
+void bullet_clear(){
+  for(struct GameObj *b = game_bullet; b < game_bullet + GAME_BULLET_NUM; b++){
+    b->kind = g_none;
+  }
+}
+void bullet_appear(){
+  struct GameObj *b = &game_bullet[game_bullet_current];
+  game_bullet_current = (game_bullet_current + 1) % GAME_BULLET_NUM;
+  b->kind = g_bullet;
+  b->x = 0;
+  b->vx = 10;
+  b->y = y + 0.2;
+  b->vy = b->vx * tan(my_angle());
+  printf("angle=%f\n", my_angle());
+  b->t = 0;
+  se_play(se_shoot);
+  score -= 10;
 }
 void obj_appear(){
   struct GameObj *g = &game_obj[game_obj_current];
@@ -225,13 +264,17 @@ int game_update(){
     break;
   case g_main:
     move_myship(sec_diff);
+    move_bullet(sec_diff);
+    if(serial_button_trigger() == 1 || mouse_click_trigger == 1){
+      bullet_appear();
+    }
     game_main_t += sec_diff;
     if(fabs(y) < Y_RANGE){
       // 自機が範囲内なら時間で点数増える
       score += sec_diff * TIME_SCORE_RATE;
     }
     obj_check(sec_diff);
-    double obj_interval = 3 / (1 + game_main_t / BGM_1LOOP);
+    double obj_interval = GAME_OBJ_INTERVAL_INIT / (1 + game_main_t / BGM_1LOOP);
     // BGM1周ごとに 1 → 1/2 → 1/3 ...となる
     if(game_main_t - last_obj_appear > obj_interval){
       obj_appear();
