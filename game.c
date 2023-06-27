@@ -104,6 +104,9 @@ void move_bullet(double sec_diff){
     b->x += b->vx * sec_diff;
     b->y += b->vy * sec_diff;
     b->t += sec_diff;
+    if(fabs(b->y) > Y_RANGE * 2 || b->x > X_RANGE || b->x < -3){
+      b->kind = g_none;
+    }
   }
 }
 void obj_check(double sec_diff){
@@ -117,8 +120,8 @@ void obj_check(double sec_diff){
     }
     double gx_prev = g->x;
     if(!g->hit_me){
-      g->x -= g->vx * sec_diff;
-      g->y -= g->vy * sec_diff;
+      g->x += g->vx * sec_diff;
+      g->y += g->vy * sec_diff;
       g->t += sec_diff;
       for(struct GameObj *b = game_bullet; b < game_bullet + GAME_BULLET_NUM; b++){
         if(b->kind == g_bullet && fabs(b->x - g->x) <= 0.5 && fabs(b->y - g->y) <= 0.5){
@@ -134,6 +137,25 @@ void obj_check(double sec_diff){
             se_play(se_hit);
             b->kind = g_none;
             break;
+          case g_yakan:
+            // なんとなく運動量保存をする
+            double ca = atan2(g->y - b->y, g->x - b->x); // 衝突角度
+            double b_vv = b->vx * cos(ca) + b->vy * sin(ca); // ca方向の成分(右上正)
+            double b_vh = - b->vx * sin(ca) + b->vy * cos(ca); // 衝突面に平行の成分(左上正)
+            double g_vv = g->vx * cos(ca) + g->vy * sin(ca);
+            double g_vh = - g->vx * sin(ca) + g->vy * cos(ca);
+            printf("b x=%.2f y=%.2f g x=%.2f y=%.2f\n", b->vx, b->vy, g->vx, g->vy);
+            printf("b v=%.2f h=%.2f g v=%.2f h=%.2f\n", b_vv, b_vh, g_vv, g_vh);
+            // -v1 + v2 = v1' - v2' ...1
+            // v1 + mv2 = v1' + mv2' ...2
+            double m = 10;
+            double b_vv_new = ((1 - m) * b_vv + 2 * m * g_vv) / (1 + m); // 1 * m + 2
+            double g_vv_new = (2 * b_vv + (m - 1) * g_vv) / (m + 1); // 2 - 1
+            b->vx = b_vv_new * cos(ca) - b_vh * sin(ca);
+            b->vy = b_vv_new * sin(ca) + b_vh * cos(ca);
+            g->vx = g_vv_new * cos(ca) - g_vh * sin(ca);
+            g->vy = g_vv_new * sin(ca) + g_vh * cos(ca);
+            se_play(se_yakan);
           case g_coin:
             break;
           }
@@ -144,6 +166,7 @@ void obj_check(double sec_diff){
         g->hit_me = 1;
         switch(g->kind){
         case g_block:
+        case g_yakan:
           state_change(g_over);
           save_score();
           break;
@@ -164,7 +187,7 @@ void obj_check(double sec_diff){
         // if(fabs(y) < Y_RANGE){
         // }
       }
-      if(g->x < -3){
+      if(fabs(g->y) > Y_RANGE * 2 || g->x > X_RANGE || g->x < -3){
         // 画面外
         g->kind = g_none;
       }
@@ -198,13 +221,16 @@ void bullet_appear(){
 void obj_appear(){
   struct GameObj *g = &game_obj[game_obj_current];
   game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
-  if(rand1() < 0.7){
-    g->kind = g_block;
-  }else{
+  double a = rand1();
+  if(a < 0.1){
+    g->kind = g_yakan;
+  }else if(a < 0.4){
     g->kind = g_coin;
+  }else{
+    g->kind = g_block;
   }
   g->x = X_RANGE;
-  g->vx = (2.0 + 2.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
+  g->vx = -(2.0 + 2.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
   g->y = (2 * rand1() - 1) * Y_RANGE;
   g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
   g->t = 0;

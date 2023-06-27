@@ -227,6 +227,9 @@ void display(void)
         // innerR, outerR, nsides, rings
         glutSolidTorus(0.05, 0.3, 8, 20);
         break;
+      case g_yakan:
+        glColor3f(1, 1, 1);
+        glutSolidTeapot(0.5);
       case g_none:
       }
     }

@@ -20,7 +20,7 @@ void state_change(enum GameState g);
 #define GAME_OBJ_NUM 20
 #define GAME_BULLET_NUM 20
 #define GAME_OBJ_INTERVAL_INIT 2 // 秒に1個出現する
-enum ObjKind { g_none = 0, g_block, g_coin, g_bullet, };
+enum ObjKind { g_none = 0, g_block, g_coin, g_yakan, g_bullet, };
 extern struct GameObj{
   enum ObjKind kind;
   double x, y, vx, vy;
