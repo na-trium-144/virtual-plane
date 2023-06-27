@@ -17,10 +17,10 @@ extern enum GameState game_state;
 extern double game_main_t;
 void state_change(enum GameState g);
 
-#define GAME_OBJ_NUM 20
-#define GAME_BULLET_NUM 20
+#define GAME_OBJ_NUM 30
 #define GAME_OBJ_INTERVAL_INIT 2 // 秒に1個出現する
 enum ObjKind { g_none = 0, g_block, g_coin, g_yakan, g_bullet, };
+extern double obj_mass[5]; // 各オブジェクトの質量
 extern struct GameObj{
   enum ObjKind kind;
   double x, y, vx, vy;
@@ -29,18 +29,16 @@ extern struct GameObj{
   int score; // このオブジェクトに表示するスコア
   double score_x, score_y; // スコア表示時のy座標(固定するため)
   double score_t; // スコアの残り表示時間
-} game_obj[], game_bullet[];
-extern int game_obj_current, game_bullet_current;
+} game_obj[];
+extern int game_obj_current;
 
 extern double mouse_x_rat, mouse_y_rat;
 extern int use_mouse;
 extern int mouse_clicked;
 
+void obj_collision(struct GameObj* b, struct GameObj* g);
 void move_myship(double sec_diff);
 void obj_check(double sec_diff);
 void obj_clear();
 void obj_appear();
-
-void move_bullet(double sec_diff);
 void bullet_appear();
-void bullet_clear();

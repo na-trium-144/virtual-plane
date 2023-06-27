@@ -230,24 +230,14 @@ void display(void)
       case g_yakan:
         glColor3f(1, 1, 1);
         glutSolidTeapot(0.5);
+        break;
+      case g_bullet:
+        glColor3f(1, 0.5, 0.3);
+        // r, slices, stacks
+        glutSolidSphere(0.1, 10, 10);
+        break;
       case g_none:
       }
-    }
-    glPopMatrix();
-  }
-  for(int i = game_bullet_current; i > game_bullet_current - GAME_BULLET_NUM; i--){
-    struct GameObj *g = &game_bullet[(i + GAME_BULLET_NUM) % GAME_BULLET_NUM];
-    if(g->kind == g_none){
-      continue;
-    }
-     
-    glPushMatrix();
-    {
-      glTranslatef(g->x, g->y, 0);
-      // glRotatef(g->t * 90, 1, 0.7, 0);
-      glColor3f(1, 0.5, 0.3);
-      // r, slices, stacks
-      glutSolidSphere(0.1, 10, 10);
     }
     glPopMatrix();
   }
