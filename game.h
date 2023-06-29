@@ -17,8 +17,8 @@ extern enum GameState game_state;
 extern double game_main_t;
 void state_change(enum GameState g);
 
-#define GAME_OBJ_NUM 30
-#define GAME_OBJ_INTERVAL_INIT 2 // 秒に1個出現する
+#define GAME_OBJ_NUM 50
+#define GAME_OBJ_INTERVAL_INIT 1 // 秒に1個出現する
 enum ObjKind { g_none = 0, g_block, g_coin, g_yakan, g_bullet, };
 extern double obj_mass[5]; // 各オブジェクトの質量
 extern struct GameObj{

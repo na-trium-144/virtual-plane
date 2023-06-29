@@ -253,7 +253,7 @@ void obj_appear(){
     g->kind = g_block;
   }
   g->x = X_RANGE;
-  g->vx = -(2.0 + 2.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
+  g->vx = -(2.0 + 3.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
   g->y = (2 * rand1() - 1) * Y_RANGE;
   g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
   g->t = 0;

@@ -130,7 +130,7 @@ void display(void)
   // default 0,0,0 -> z- (up= y+)
   // eye -> center, (up)
   gluLookAt(2.5, -0.5, 7, 4, 0, 0, 0, 1, 0);
-
+  
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter3/index.html
   // https://www.oit.ac.jp/is/L231/~whashimo/Article/OpenGL/Chapter5/index.html
   // https://stackoverflow.com/questions/55338066/how-do-i-make-opengl-specular-light-work
