@@ -3,6 +3,7 @@ double my_angle();
 extern double score;
 extern int hiscore;
 void init_game();
+double rand1();
 int game_update();
 #define Y_RANGE 3
 #define X_RANGE 15
@@ -42,3 +43,4 @@ void obj_check(double sec_diff);
 void obj_clear();
 void obj_appear();
 void bullet_appear();
+void star_check();

@@ -51,6 +51,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 // #define SHOW_GRID
 
@@ -123,7 +124,7 @@ void display(void)
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   // glFrustum (-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
-  gluPerspective(60, aspect, 1.5, 20);
+  gluPerspective(60, aspect, 1.5, 50);
 
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity();
@@ -148,6 +149,29 @@ void display(void)
 
   glEnable(GL_DEPTH_TEST);
 
+  // 背景
+  static double scroll = 0;
+  srand(0);
+  for(int d = 1; d <= 3; d++){
+    double z = -5 * d;
+    double xr = (-z + 7) / 7 * 10 * 1.5;
+    double yr = (-z + 7) / 7 * 6 * 2;
+    for(int n = 0; n < 20; n++){
+      double x = xr * rand1() - xr * 0.2 - scroll;
+      while(x < - xr * 0.2){
+	x += xr;
+      }
+      double y = yr * rand1() - yr * 0.5;
+      glPushMatrix();
+      glColor3f(1, 1, 0.9);
+      glTranslatef(x, y, z);
+      glutSolidSphere(0.05, 5, 5);
+      glPopMatrix();
+    }
+  }
+  srand((unsigned int)time(NULL));
+  scroll += 0.1;
+  
   // xが右奥、zが右前、yが上
   glPushMatrix();
   {
