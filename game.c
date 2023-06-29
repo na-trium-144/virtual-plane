@@ -92,7 +92,22 @@ void move_myship(double sec_diff){
   if(yp > 1){
     yp = 1;
   }
-  double new_y = yp * Y_RANGE;
+  // biquadフィルタをかける
+  // https://www.utsbox.com/?page_id=523
+  static double yp_1 = 0, yp_2 = 0;
+  static double ypf_1 = 0, ypf_2 = 0;
+  double omega = 2 * 3.14 * 4 / 30;
+  double alpha = sin(omega) / (2.0 * 0.7);
+  double a0 = 1 + alpha, a1 = -2 * cos(omega), a2 = 1 - alpha,
+    b0 = (1 - cos(omega)) / 2, b1 = 1 - cos(omega), b2 = b0;
+  double ypf = b0 / a0 * yp + b1 / a0 * yp_1 + b2 / a0 * yp_2
+    - a1 / a0 * ypf_1 - a2 / a0 * ypf_2;
+  yp_2 = yp_1;
+  yp_1 = yp;
+  ypf_2 = ypf_1;
+  ypf_1 = ypf;
+
+  double new_y = ypf * Y_RANGE;
   vy = (new_y - y) / sec_diff;
   y = new_y;
 }
