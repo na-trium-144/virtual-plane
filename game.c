@@ -193,6 +193,7 @@ void obj_check(double sec_diff){
         se_play(se_coin);
         break;
       case g_none:
+	break;
       }
     }
     if(g->x < -0.5 && gx_prev >= -0.5){
@@ -261,6 +262,7 @@ int game_update(){
   }
   sec_prev = sec;
 
+  read_serial();
   int mouse_click_trigger = mouse_clicked && !mouse_clicked_prev;
   mouse_clicked_prev = mouse_clicked;
   mouse_clicked = 0;

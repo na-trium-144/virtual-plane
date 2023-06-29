@@ -237,6 +237,7 @@ void display(void)
         glutSolidSphere(0.1, 10, 10);
         break;
       case g_none:
+	break;
       }
     }
     glPopMatrix();
@@ -340,7 +341,6 @@ void mouse_motion(int x, int y){
 }
 
 void update(){
-  read_serial();
   if(game_update()){
     glutPostRedisplay();
   }
