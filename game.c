@@ -86,11 +86,12 @@ void move_myship(double sec_diff){
   }else{
     yp = (serial_distance - (D_MAX + D_MIN) / 2) / ((D_MAX - D_MIN) / 2);
   }
-  if(yp < -1){
-    yp = -1;
+  double margin = 1 + Y_MARGIN / Y_RANGE;
+  if(yp < -1 * margin){
+    yp = -1 * margin;
   }
-  if(yp > 1){
-    yp = 1;
+  if(yp > 1 * margin){
+    yp = 1 * margin;
   }
   // biquadフィルタをかける
   // https://www.utsbox.com/?page_id=523

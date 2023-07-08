@@ -6,6 +6,7 @@ void init_game();
 double rand1();
 int game_update();
 #define Y_RANGE 3
+#define Y_MARGIN 0.1
 #define X_RANGE 15
 #define BPM 148
 #define BGM_1LOOP (60.0 / BPM * 4 * 48)
