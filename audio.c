@@ -27,16 +27,18 @@ const char *wav_name[WAV_NUM] = {
     "./wav/vf_hit.wav",
     "./wav/vf_yakan.wav",
 };
-int16_t *wav_bgm[WAV_NUM];
+int16_t *wav_bgm[WAV_NUM]; // wavファイルのデータ
+// 開始位置、終了位置、現在位置
 int16_t *wav_start[WAV_NUM], *wav_end[WAV_NUM], *wav_current[WAV_NUM];
 
-int wav_flag[WAV_NUM];
-int bgm_fade = 0;
-#define BGM_FADE_T 1
-double bgm_vol_current = 1;
-double bgm_end_loop = 1; // タイトルではbgmの1ループが短い
+int wav_flag[WAV_NUM]; // 再生中かどうか
+int bgm_fade = 0; // フェードアウトする=1
+#define BGM_FADE_T 1 // フェードアウト時間
+double bgm_vol_current = 1; // 現在音量
+double bgm_end_loop = 1; // bgmの1ループの長さを変える場合は長さを設定(0〜1, 割合)
 int hidden_bgm2(){
     // se再生中はbgm2を止める
+    // seのどれかが再生中なら1を返す
     for(int c = 0; c < SE_NUM; c++){
         if(wav_flag[c + BGM_NUM]){
             return 1;
@@ -45,6 +47,7 @@ int hidden_bgm2(){
     return 0;
 }
 void se_play(enum se c){
+    // seの再生を開始
     wav_current[c + BGM_NUM] = wav_start[c + BGM_NUM];
     wav_flag[c + BGM_NUM] = 1;
 }
@@ -56,28 +59,34 @@ void bgm_stop(){
 }
 void bgm_change(enum GameState g){
     if(g == g_ready){
+        // readyはseを流す
         se_play(se_ready);
     }
-    bgm_fade = g == g_over;
+    bgm_fade = g == g_over; // ゲームオーバーはフェードアウトする
     bgm_vol_current = 1;
-    bgm_end_loop = g == g_title ? 1.0 / 6 : 1;
+    bgm_end_loop = g == g_title ? 1.0 / 6 : 1; // タイトルは1ループが短い
     for(int c = 0; c < BGM_NUM; c++){
         int f;
         switch(g){
         case g_title:
+            // メロディー以外流す
             f = c >= 3;
             break;
         case g_ready:
+            // 全部止める
             f = 0;
             break;
         case g_main:
+            // 全部流す
             f = 1;
             break;
         case g_over:
+            // メロディーのみ流す
             f = c < 2;
             break;
         }
         if(f && !wav_flag[c]){
+            // 今まで止まってたものは最初から
             wav_current[c] = wav_start[c];
         }
         wav_flag[c] = f;
@@ -85,6 +94,7 @@ void bgm_change(enum GameState g){
 }
 
 void init_wav(){
+    // wavファイルをメモリに読みこむ
     for(int i = 0; i < WAV_NUM; i++){
         FILE *fp = fopen(wav_name[i], "rb");
         if(fp) {
@@ -97,6 +107,7 @@ void init_wav(){
 
             fclose(fp);
 
+            // wavファイル内からdataを探す
             for(uint8_t *p = (uint8_t*)wav_bgm[i]; p < (uint8_t*)wav_bgm[i] + fsize; p++){
                 if(p[0] == 'd' && p[1] == 'a' && p[2] == 't' && p[3] == 'a'){
                     size_t data_len = p[4] | p[5] << 8 | p[6] << 16 | p[7] << 24;
@@ -113,6 +124,8 @@ void init_wav(){
     }
 }
 
+// portaudioのコールバック
+// 各wavの再生状態と現在位置から出力するwavを合成
 static int patestCallback( const void *inputBuffer, void *outputBuffer,
                            unsigned long framesPerBuffer,
                            const PaStreamCallbackTimeInfo* timeInfo,
@@ -132,15 +145,18 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
                 out_l1 = *(wav_current[c]++);
                 out_r1 = *(wav_current[c]++);
                 if(c < BGM_NUM){
+                    // フェードアウトする場合音量を変更
                     out_l1 *= bgm_vol_current;
                     out_r1 *= bgm_vol_current;
                 }
                 if(!(c == 2 && hidden_bgm2())){
+                    // bgm2を隠す場合以外は出力
                     out_l += out_l1;
                     out_r += out_r1;
                 }
                 int16_t *end = wav_start[c] + (size_t)((wav_end[c] - wav_start[c]) * bgm_end_loop);
                 if(wav_current[c] >= end){
+                    // 再生が終了したら最初に戻る
                     wav_current[c] = wav_start[c];
                     if(c >= BGM_NUM){
                         // seは終わったら止める
@@ -149,6 +165,7 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
                 }
             }
         }
+        // オーバーフロー処理
         if(out_l > 0x7fff){
             out_l = 0x7fff;
         }
@@ -166,6 +183,7 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
 
     }
     if(bgm_fade){
+        // フェードアウトは音量を減少
         bgm_vol_current -= framesPerBuffer / ((double)BGM_FADE_T * SAMPLE_RATE);
         if(bgm_vol_current < 0){
             bgm_vol_current = 0;
@@ -210,6 +228,7 @@ void init_pa(){
     }
 }
 
+// -DIS_MAINのときbgm再生のテストプログラムになる
 #ifdef IS_MAIN
 int main(){
     init_wav();

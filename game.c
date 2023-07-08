@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+// 超音波センサの使用する距離の範囲
 #define D_MIN 5
 #define D_MAX 15
 
@@ -27,6 +28,7 @@ int mouse_clicked = 0, mouse_clicked_prev = 0;
 void init_game(){
   srand((unsigned int)time(NULL));
 
+  // セーブデータの読み込み
   int f = open("hiscore.txt", O_RDONLY);
   if(f >= 0){
     char buf[20];
@@ -38,6 +40,7 @@ void init_game(){
   bgm_change(g_title);
 }
 void save_score(){
+  // スコアが最高記録ならセーブする
   score = (double)(int)(score);
   if(score > hiscore){
     hiscore = score;
@@ -53,13 +56,13 @@ void save_score(){
 
 struct GameObj game_obj[GAME_OBJ_NUM];
 int game_obj_current = 0;
-int game_over = 0;
 enum GameState game_state = g_title;
 double game_main_t = 0;
-double last_obj_appear = 0;
-double obj_mass[] = {0, 5, 2, 15, 1};
+double last_obj_appear = 0; // 最後にオブジェクト出現した時刻
+double obj_mass[] = {0, 5, 2, 15, 1}; // 各オブジェクトの質量
 
 void state_change(enum GameState g){
+  // 状態切替時の処理
   game_main_t = 0;
   game_state = g;
   bgm_change(g);
@@ -80,13 +83,14 @@ double rand1(){
 }
 
 void move_myship(double sec_diff){
-  double yp;
+  double yp; // y座標を-1〜1にする
   if(use_mouse){
     yp = (0.5 - mouse_y_rat) * 3;
   }else{
     yp = (serial_distance - (D_MAX + D_MIN) / 2) / ((D_MAX - D_MIN) / 2);
   }
   double margin = 1 + Y_MARGIN / Y_RANGE;
+  // ±1ちょっとの範囲におさめる
   if(yp < -1 * margin){
     yp = -1 * margin;
   }
@@ -108,6 +112,7 @@ void move_myship(double sec_diff){
   ypf_2 = ypf_1;
   ypf_1 = ypf;
 
+  // ±Y_RANGEの範囲に変換
   double new_y = ypf * Y_RANGE;
   vy = (new_y - y) / sec_diff;
   y = new_y;
@@ -127,6 +132,7 @@ void obj_collision(struct GameObj* b, struct GameObj* g){
   double m = obj_mass[g->kind] / obj_mass[b->kind];
   double b_vv_new = ((1 - m) * b_vv + 2 * m * g_vv) / (1 + m); // 1 * m + 2
   double g_vv_new = (2 * b_vv + (m - 1) * g_vv) / (m + 1); // 2 - 1
+  // 衝突後の速度をセット
   b->vx = b_vv_new * cos(ca) - b_vh * sin(ca);
   b->vy = b_vv_new * sin(ca) + b_vh * cos(ca);
   g->vx = g_vv_new * cos(ca) - g_vh * sin(ca);
@@ -141,6 +147,7 @@ void obj_check(double sec_diff){
     if(game_state != g_main){
       continue;
     }
+    // x,yを動かす
     double gx_prev = g->x;
     g->x += g->vx * sec_diff;
     g->y += g->vy * sec_diff;
@@ -149,6 +156,7 @@ void obj_check(double sec_diff){
       if(b->kind == g_none){
         continue;
       }
+      // 他のオブジェクトと衝突チェック
       if(fabs(b->x - g->x) <= 0.5 && fabs(b->y - g->y) <= 0.5){
         struct GameObj *c1 = b, *c2 = g; // c1->kind >= c2->kind に注意
         if(b->kind < g->kind){
@@ -209,7 +217,7 @@ void obj_check(double sec_diff){
         se_play(se_coin);
         break;
       case g_none:
-	break;
+        break;
       }
     }
     if(g->x < -0.5 && gx_prev >= -0.5){
@@ -245,6 +253,7 @@ void bullet_appear(){
 void obj_appear(){
   struct GameObj *g = &game_obj[game_obj_current];
   game_obj_current = (game_obj_current + 1) % GAME_OBJ_NUM;
+  // オブジェクトの種類をランダムに設定
   double a = rand1();
   if(a < 0.1){
     g->kind = g_yakan;
@@ -253,8 +262,11 @@ void obj_appear(){
   }else{
     g->kind = g_block;
   }
-  g->x = X_RANGE;
+  g->x = X_RANGE; // 右端
+  // 速度をランダムにする
+  // 最初は2〜5、時間が経つごとに速くなる
   g->vx = -(2.0 + 3.0 * rand1()) * (1 + game_main_t / BGM_1LOOP);
+  // y速度を決めた後、±Y_RANGEに到達するようy初期位置を逆算
   g->vy = 1.0 * rand1() - 0.5; // -0.5〜0.5
   g->y = (2 * rand1() - 1) * Y_RANGE - g->vy * fabs(g->x / g->vx);
   g->t = 0;
@@ -264,6 +276,9 @@ void obj_appear(){
   printf("v = (%.3f, %.3f)\n", g->vx, g->vy);
 }
 
+// 繰り返し実行する処理
+// 30fpsで処理する。1/30秒経っていなければ何もせずreturn 0
+// 処理をしたらreturn 1
 int game_update(){
   static double sec_prev = 0;
   struct timespec spec;
@@ -278,11 +293,14 @@ int game_update(){
   }
   sec_prev = sec;
 
+  // シリアルとマウスを読む
   read_serial();
+  // mouse_click_triggerはクリックした瞬間だけ1となる
   int mouse_click_trigger = mouse_clicked && !mouse_clicked_prev;
   mouse_clicked_prev = mouse_clicked;
-  mouse_clicked = 0;
+  mouse_clicked = 0; // 0に戻す
 
+  // 現在の状態に応じて処理を記述
   switch(game_state){
   case g_title:
     move_myship(sec_diff);

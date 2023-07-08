@@ -51,6 +51,7 @@ int current_pos = 0;
 char buf[SERIAL_BUF_LEN] = {};
 int tmp_pos = 0, tmp_len = 0;
 
+// データがあればreadし1を返す
 int read_serial_next(){
   if(serial_port < 0){
     return 0;
@@ -70,21 +71,21 @@ int read_serial_line(){
   while(1){
     for(; tmp_pos < tmp_len; tmp_pos++){
       if(buf[tmp_pos] == '\n'){
-	serial_buf[current_pos] = 0;
-	int current_len = current_pos;
-	current_pos = 0;
-	tmp_pos += 1;
-	if(current_len > 0){
-	  //	  printf("%s\n", serial_buf);
-	  return current_len;
-	}
+        serial_buf[current_pos] = 0;
+        int current_len = current_pos;
+        current_pos = 0;
+        tmp_pos += 1;
+        if(current_len > 0){
+          //          printf("%s\n", serial_buf);
+          return current_len;
+        }
       }else if(buf[tmp_pos] == '\r'){
-	// skip
+        // skip
       }else{
-	serial_buf[current_pos++] = buf[tmp_pos];
+        serial_buf[current_pos++] = buf[tmp_pos];
       }
       if(current_pos >= SERIAL_BUF_LEN){
-	current_pos = 0;
+        current_pos = 0;
       }
     }
     // 続きがあるか確認する
@@ -129,6 +130,7 @@ int serial_distance_trigger(double target){
   }
 }
 
+// serialの動作確認
 #ifdef IS_MAIN
 int main() {
   if(!init_serial()){
@@ -137,10 +139,10 @@ int main() {
   while(1){
     if ( read_serial() ) {
       printf(">> distance = %f (%d), button = %d (%d)\n",
-	     serial_distance,
-	     serial_distance_trigger(10),
-	     serial_button,
-	     serial_button_trigger());
+             serial_distance,
+             serial_distance_trigger(10),
+             serial_button,
+             serial_button_trigger());
     }
   }
 }
