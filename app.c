@@ -165,6 +165,7 @@ void display(void)
   // 複数の点がx, y をランダム+一定速度で移動
   // 毎フレームrand(0)して乱数生成することでランダムでかつ常に同じ位置になる
   static double scroll = 0;
+  unsigned int next_seed = rand1() * (1L << sizeof(unsigned int) * 8);
   srand(0);
   for(int d = 1; d <= 3; d++){
     double z = -5 * d;
@@ -187,7 +188,7 @@ void display(void)
     }
   }
   // 乱数を乱数になるよう戻す
-  srand((unsigned int)time(NULL));
+  srand(next_seed);
   scroll += 0.1;
   
   // xが右奥、zが右前、yが上
