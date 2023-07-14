@@ -123,6 +123,18 @@ void display_title(double r, double g, double b){
   glPopMatrix();
 }
 
+// 法線ベクトルを計算する
+// (plane_v[1] - plane_v[0]) * (plane_v[2] - plane_v[0])
+// plane_v: 4*3配列 plane_v[3]に法線ベクトルを入れて返す
+void calc_normal(float plane_v[4][3]){
+  for(int i = 0; i < 3; i++){
+    int j = (i + 1) % 3;
+    int k = (i + 2) % 3;
+    plane_v[3][i] = 
+      (plane_v[1][j] - plane_v[0][j]) * (plane_v[2][k] - plane_v[0][k])
+      - (plane_v[2][j] - plane_v[0][j]) * (plane_v[1][k] - plane_v[0][k]);
+  }
+}
 // 画面表示の更新
 void display(void)
 {
@@ -210,26 +222,52 @@ void display(void)
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glBegin(GL_TRIANGLES);
     {
-      // Normalが正しくないけど正しい計算方法がわからない
-      glNormal3f(0, 1, 0);
-      glVertex3f(0.5, 0.2, 0);
-      glVertex3f(-0.5, 0.2, 0.1);
-      glVertex3f(-0.5, 0.15, 0.5);
-
-      glNormal3f(0, 1, 0);
-      glVertex3f(0.5, 0.2, 0);
-      glVertex3f(-0.5, 0.15, -0.5);
-      glVertex3f(-0.5, 0.2, -0.1);
-
-      glNormal3f(0, 0, -1);
-      glVertex3f(0.5, 0.2, 0);
-      glVertex3f(-0.5, -0.2, 0);
-      glVertex3f(-0.5, 0.2, 0.1);
-
-      glNormal3f(0, 0, 1);
-      glVertex3f(0.5, 0.2, 0);
-      glVertex3f(-0.5, 0.2, -0.1);
-      glVertex3f(-0.5, -0.2, 0);
+      static float plane_v[4][3] = {
+        {0.5, 0.2, 0},
+        {-0.5, 0.2, 0.1},
+        {-0.5, 0.15, 0.5},
+      };
+      calc_normal(plane_v);
+      glNormal3fv(plane_v[3]);
+      glVertex3fv(plane_v[0]);
+      glVertex3fv(plane_v[1]);
+      glVertex3fv(plane_v[2]);
+    }
+    {
+      static float plane_v[4][3] = {
+        {0.5, 0.2, 0},
+        {-0.5, 0.15, -0.5},
+        {-0.5, 0.2, -0.1},
+      };
+      calc_normal(plane_v);
+      glNormal3fv(plane_v[3]);
+      glVertex3fv(plane_v[0]);
+      glVertex3fv(plane_v[1]);
+      glVertex3fv(plane_v[2]);
+    }
+    {
+      static float plane_v[4][3] = {
+        {0.5, 0.2, 0},
+        {-0.5, -0.2, 0},
+        {-0.5, 0.2, 0.1},
+      };
+      calc_normal(plane_v);
+      glNormal3fv(plane_v[3]);
+      glVertex3fv(plane_v[0]);
+      glVertex3fv(plane_v[1]);
+      glVertex3fv(plane_v[2]);
+    }
+    {
+      static float plane_v[4][3] = {
+        {0.5, 0.2, 0},
+        {-0.5, 0.2, -0.1},
+        {-0.5, -0.2, 0},
+      };
+      calc_normal(plane_v);
+      glNormal3fv(plane_v[3]);
+      glVertex3fv(plane_v[0]);
+      glVertex3fv(plane_v[1]);
+      glVertex3fv(plane_v[2]);
     }
     glEnd();
 
